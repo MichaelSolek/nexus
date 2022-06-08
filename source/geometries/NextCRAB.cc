@@ -50,9 +50,9 @@ namespace nexus {
   {
     // CHAMBER ///////////////////////////////////////////////////////
 
-    const G4double chamber_diam   =  20. * cm;
-    const G4double chamber_length = 100. * cm;
-    const G4double chamber_thickn =   1. * cm;
+    const G4double chamber_diam   =  48.8696 * cm; // 19.240 inches
+    const G4double chamber_length = 127.3175 * cm; // 50.125 inches
+    const G4double chamber_thickn =   1.9304 * cm; // 0.76 inches
 
     G4Tubs* chamber_solid =
       new G4Tubs("CHAMBER", 0., (chamber_diam/2. + chamber_thickn),
@@ -93,7 +93,7 @@ namespace nexus {
 		      gas_logic, false, 0, true);
 
     // Define this volume as an ionization sensitive detector
-    IonizationSD* sensdet = new IonizationSD("/CYLINDRIC_CHAMBER/ACTIVE");
+    IonizationSD* sensdet = new IonizationSD("/NEXT_CRAB/ACTIVE");
     active_logic->SetSensitiveDetector(sensdet);
     G4SDManager::GetSDMpointer()->AddNewDetector(sensdet);
 
