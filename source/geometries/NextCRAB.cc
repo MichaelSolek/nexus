@@ -95,7 +95,16 @@ namespace nexus{
         G4LogicalVolume* lab_logic_volume = new G4LogicalVolume(lab_solid_volume, G4NistManager::Instance()->FindOrBuildMaterial("G4_AIR"), lab_name);
 
         // Create steel cylinder for detector shell
-        G4Tubs* chamber_solid = new G4Tubs("CHAMBER", 0., (chamber_diam/2. + chamber_thickn), ) //this line unfinished
+        G4Tubs* chamber_solid = new G4Tubs("CHAMBER", 0., (chamber_diam/2. + chamber_thickn), (chamber_legnth/2. + chamber_thickn), 0., twopi);
+        G4LogicalVolume* chamber_logic = new G4LogicalVolume(chamber_solid, materials::Steel(), "CHAMBER")
+
+        // Fill it with gaseous argon
+        G4Tubs* gas_solid = new G4Tubs("GAS", 0., chamber_diam/2., chamber_length/2., 0., twopi);
+        G4Tubs* Active_solid = new G4Tubs("ACTIVE", 0., Active_diam/2., Active_length/2., 0., twopi);
+        G4Material* gxe = materials::GXe(gas_pressure_);
+        gxe->SetMaterialPropertiesTable(opticalprops::GXe(gas_pressure_, 68));
+        G4LogicalVolume* gas_logic = new G4LogicalVolume(gas_solid, gxe, "GAS");
+        G4LogicalVolume* Active_logic = new G4LogicalVlume(Active_solid, gxe, "ACTIVE");
     }
 
 }
