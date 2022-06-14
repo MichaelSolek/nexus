@@ -37,7 +37,7 @@
 #/Generator/CrabSourceGenerator/NDecays 1
 
 #Actions
-/Actions/DefaultEventAction/energy_threshold 100 eV
+#/Actions/DefaultEventAction/energy_threshold 100 eV
 #/Actions/DefaultEventAction/max_energy 1.00 GeV
 
 # PERSISTENCY
