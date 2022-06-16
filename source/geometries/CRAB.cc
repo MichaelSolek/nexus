@@ -33,10 +33,12 @@ namespace nexus{
              CRAB::CRAB():
              GeometryBase(),
              msg_(nullptr),
-             Lab_size(1. *m),
-             chamber_diam   (15. * cm),
-             chamber_length (25. * cm),
-             chamber_thickn (2. * mm),
+             Lab_size(3. *m),
+             chamber_diam   (19.24 * 2.54 * cm),
+             chamber_length (50.125 * 2.54 * cm),
+             chamber_thickn (0.76 * 25.4 * mm),
+	     Active_diam    (235. * mm),
+	     Active_length  (1051. * mm),
              SourceEn_offset (5.2 *cm),
              SourceEn_diam   (1. * cm),
              SourceEn_length (1 * cm),
@@ -102,7 +104,7 @@ namespace nexus{
 
 
         //Creating the Steel Cylinder that we use
-        G4Tubs* chamber_solid =new G4Tubs("CHAMBER", 0., (chamber_diam/2. + chamber_thickn),(chamber_length/2. + chamber_thickn), 0.,twopi);
+        G4Tubs* chamber_solid =new G4Tubs("CHAMBER", chamber_diam/2, (chamber_diam/2. + chamber_thickn),(chamber_length/2. + chamber_thickn), 0.,twopi);
         G4LogicalVolume* chamber_logic =new G4LogicalVolume(chamber_solid,materials::Steel(), "CHAMBER"); //
         // Placing the gas in the chamber
 
@@ -115,7 +117,7 @@ namespace nexus{
         //G4Tubs* SourceHolChamberBlock_solid =new G4Tubs("SourceHolChBlock",0,(SourceEn_holedia/2),( SourceEn_thickn/2), 0.,twopi);
 
 
-        //G4VSolid *SourceHolderGas_solid= new G4SubtractionSolid("SourceHolderGas",Source_Chm_solid,SourceHolder_solid);
+      //G4VSolid *SourceHolderGas_solid= new G4SubtractionSolid("SourceHolderGas",Source_Chm_solid,SourceHolder_solid);
 
 
         //G4Material* gxe = materials::GXe(gas_pressure_);
