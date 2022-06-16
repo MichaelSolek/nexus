@@ -34,11 +34,11 @@ namespace nexus{
              GeometryBase(),
              msg_(nullptr),
              Lab_size(3. *m),
-             chamber_diam   (19.24 * 2.54 * cm),
-             chamber_length (50.125 * 2.54 * cm),
-             chamber_thickn (0.76 * 25.4 * mm),
-	     Active_diam    (235. * mm),
-	     Active_length  (1051. * mm),
+             chamber_diam   (19.24 * 2.54 * cm), //based on model dimensions, not drawings, may need revision
+             chamber_length (50.125 * 2.54 * cm),//based on model dimensions, not drawings, may need revision
+             chamber_thickn (0.76 * 25.4 * mm),  //based on model dimensions, not drawings, may need revision
+	     Active_diam    (482.7 * mm),	 //based on inner diameter of XON POLY OUTER WRAP.pdf drawing, may need revision
+	     Active_length  (1051. * mm),	 //based on length of staves in drawings, may need revision
              SourceEn_offset (5.2 *cm),
              SourceEn_diam   (1. * cm),
              SourceEn_length (1 * cm),
