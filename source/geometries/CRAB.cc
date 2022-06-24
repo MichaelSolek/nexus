@@ -184,6 +184,8 @@ namespace nexus{
         G4LogicalVolume* Chamber = lvStore->GetVolume("CHAMBER");
         G4LogicalVolume* Lab = lvStore->GetVolume("LAB");
         G4LogicalVolume* Active = lvStore->GetVolume("FIELD_CAGE");
+	G4LogicalVolume* EL = lvStore->GetVolume("EL_GAP");
+	G4LogicalVolume* Beyond = lvStore->GetVolume("BEYOND_EL");
         G4LogicalVolume* Gas = lvStore->GetVolume("GAS");
 
         //G4LogicalVolume* SourceHolder = lvStore->GetVolume("SourceHolChamber_logic");
@@ -202,6 +204,8 @@ namespace nexus{
         GasVa->SetForceWireframe(true);
         ActiveVa->SetForceCloud(true);
         Active->SetVisAttributes(ActiveVa);
+	Beyond->SetVisAttributes(ActiveVa);
+	EL->SetVisAttributes(ActiveVa);
         Gas->SetVisAttributes(GasVa);
         //SourceHolderVa->SetForceSolid(true);
         //SourceHolderVa->SetForceSolid(true);
