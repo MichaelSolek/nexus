@@ -110,7 +110,7 @@ namespace nexus{
 	// Placing the gas in the chamber and define different field regions
         G4Tubs* gas_solid = new G4Tubs("GAS", 0., chamber_diam/2., chamber_length/2., 0., twopi);
         G4Tubs* fieldCage_solid = new G4Tubs("FIELD_CAGE", 0., Active_diam/2., (807.157 * mm)/2., 0., twopi); //length is model distance from edge of cathode to edge of nearest EL ring
-	G4Tubs* EL_solid = new G4Tubs("EL_GAP", 0., 382. * mm, (6.628 * mm)/2., 0, twopi);
+	G4Tubs* EL_solid = new G4Tubs("EL_GAP", 0., (382. * mm)/2., (6.628 * mm)/2., 0, twopi);
 	G4Tubs* beyondEL_solid = new G4Tubs("BEYOND_EL", 0., Active_diam/2., (7.022 * 25.4 * mm)/2., 0., twopi);
 
         // Radioactive Source Encloser
