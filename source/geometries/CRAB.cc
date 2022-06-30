@@ -21,6 +21,8 @@
 #include "G4PhysicalVolumeStore.hh"
 #include "G4LogicalVolumeStore.hh"
 #include <G4UnionSolid.hh>
+#include <G4MultiUnion.hh>
+#include <G4ExtrudedSolid.hh>
 
 #include <CLHEP/Units/SystemOfUnits.h>
 #include <CLHEP/Units/PhysicalConstants.h>
@@ -92,11 +94,12 @@ namespace nexus{
     {
         //delete msg_;
     }
+    
+    G4MultiUnion* getReflectivePanelArray();
 
     void CRAB::Construct(){
 
-
-        //Constructing Lab Space
+	//Constructing Lab Space
         G4String lab_name="LAB";
         G4Box * lab_solid_volume = new G4Box(lab_name,Lab_size/2,Lab_size/2,Lab_size/2);
         G4LogicalVolume * lab_logic_volume= new G4LogicalVolume(lab_solid_volume,G4NistManager::Instance()->FindOrBuildMaterial("G4_AIR"),lab_name) ;
@@ -124,6 +127,9 @@ namespace nexus{
 	G4UnionSolid* el_rings_solid = new G4UnionSolid("EL_RINGS", el_ring1_solid, el_ring2_solid, 0, G4ThreeVector(0., 0., 19.628 * mm)); // Make sure to place from ring 1, by wall
 	G4LogicalVolume* el_rings_logic = new G4LogicalVolume(el_rings_solid, materials::Steel(), "EL_RINGS");
 
+	// Reflective panel array
+	G4MultiUnion* reflectors_solid = getReflectivePanelArray();
+        G4LogicalVolume* reflectors_logic = new G4LogicalVolume(reflectors_solid, G4NistManager::Instace()->FindOrBuildMaterial("G4_GOLD"), "REFLECTIVE_PANELS");
 	// Radioactive Source Encloser
         //Source
         //G4Tubs* SourceHolChamber_solid =new G4Tubs("SourceHolChamber", SourceEn_holedia/2, (SourceEn_diam/2. + SourceEn_thickn),(SourceEn_length/2. + SourceEn_thickn),0,twopi);
@@ -166,6 +172,7 @@ namespace nexus{
 	new G4PVPlacement(0, G4ThreeVector(0., 0., -545.3015 * mm), beyondEL_logic, beyondEL_solid->GetName(), gas_logic, false, 0, true);
 	new G4PVPlacement(0, G4ThreeVector(0., 0., 392.7695 * mm), cathode_logic, cathode_solid->GetName(), gas_logic, false, 0, true);
 	new G4PVPlacement(0, G4ThreeVector(0., 0., -447.5155 * mm), el_rings_logic, el_rings_solid->GetName(), gas_logic, false, 0, true);
+	new G4PVPlacement(0, G4ThreeVector(0., 0., -233.4285 * mm), reflectors_logic, reflectors_solid->GetName(), gas_logic, false, 0, true);
         //new G4PVPlacement(rm, G4ThreeVector(-SourceEn_offset,-SourceEn_offset,-SourceEn_offset), SourceHolChamber_logic, SourceHolChamber_solid->GetName(),gas_logic, false, 0, true);
         //new G4PVPlacement(rm, G4ThreeVector(-SourceEn_offset-SourceEn_length/2,-SourceEn_offset-SourceEn_length/2,-SourceEn_offset), SourceHolChamberBlock_logic, SourceHolChamberBlock_solid->GetName(),gas_logic, false, 0, true);
        // new G4PVPlacement(rm, G4ThreeVector(-SourceEn_offset,0,0), SourceHolChamber_logic, SourceHolChamber_solid->GetName(),gas_logic, false, 0, true);
@@ -202,6 +209,7 @@ namespace nexus{
         G4LogicalVolume* Gas = lvStore->GetVolume("GAS");
 	G4LogicalVolume* Cathode = lvStore->GetVolume("CATHODE");
 	G4LogicalVolume* EL_Rings = lvStore->GetVolume("EL_RINGS");
+	G4LogicalVolume* Panels = lvStore->GetVolume("REFLECTIVE_PANELS");
 
         //G4LogicalVolume* SourceHolder = lvStore->GetVolume("SourceHolChamber_logic");
         //G4LogicalVolume* SourceHolderBlock = lvStore->GetVolume("SourceHolChBlock_logic");
@@ -217,6 +225,7 @@ namespace nexus{
         Chamber->SetVisAttributes(ChamberVa);
 	Cathode->SetVisAttributes(TestVa);
 	EL_Rings->SetVisAttributes(TestVa);
+	Panels->SetVisAttributes(TestVa);
 
         LabVa->SetForceWireframe(false);
         //GasVa->SetForceWireframe(false);
@@ -250,5 +259,34 @@ namespace nexus{
         return vtx_;
     }
 
+    G4MultiUnion* getReflectivePanelArray() {
+        G4MultiUnion* panel_array = new G4MultiUnion("REFLECTIVE_PANELS");
+	G4RotationMatrix* rm[12];
+	G4Transform3D tr[12];
+	G4double initialRotation = 19.60 * deg;
+	G4double radius = (370.592/2.) * mm;
+        
+	std::vector<G4TwoVector> polygon = {G4TwoVector(20.20*mm/2.,11.76*mm/2.), G4TwoVector(12.94*mm/2.,-0.876*mm), G4TwoVector(101.*mm/2.,-0.876*mm),
+		                            G4TwoVector(98.318*mm/2.,-11.76*mm/2.), G4TwoVector(-98.317*mm/2.,-11.76*mm/2.), G4TwoVector(-101.*mm/2.,-0.876*mm),
+		                            G4TwoVector(-12.94*mm/2.,-0.876*mm), G4TwoVector(-20.20*mm/2.,11.76*mm/2.)};
+	G4RotationMatrix* testrm = new G4RotationMatrix();
+	testrm->rotateZ(initialRotation);
+	G4ExtrudedSolid* testPanel = new G4ExtrudedSolid("TESTPANEL", polygon, 252*mm/2., G4TwoVector(0,0), 1, G4TwoVector(0,0), 1);
+	panel_array->AddNode(testPanel, G4Transform3D(*testrm, G4ThreeVector(100.*mm,50.*mm,0.)));
+        for(int i=0; i<12; i++){
+            rm[i] = new G4RotationMatrix();
+	    G4double rotation = initialRotation + i*30.*deg;
+	    rm[i]->rotateZ(rotation);
+	    G4ThreeVector position = G4ThreeVector((radius*cos(90.*deg-rotation)), radius*sin(90.*deg-rotation), 0.);
+	    tr[i] = G4Transform3D(*rm[i], position);
+	    G4double halfz = 252*mm/2.;
+	    if(i==0 || i==2)
+		    halfz *= 2.;
+	    G4ExtrudedSolid* panel = new G4ExtrudedSolid("PANEL_" + std::to_string(i), polygon, halfz, G4TwoVector(0,0), 1, G4TwoVector(0,0), 1);
+	    panel_array->AddNode(panel, tr[i]);
+	}
 
+	panel_array->Voxelize();
+	return panel_array;
+    }
 }
