@@ -20,6 +20,7 @@
 #include <G4VisAttributes.hh>
 #include "G4PhysicalVolumeStore.hh"
 #include "G4LogicalVolumeStore.hh"
+#include <G4UnionSolid.hh>
 
 #include <CLHEP/Units/SystemOfUnits.h>
 #include <CLHEP/Units/PhysicalConstants.h>
@@ -117,6 +118,12 @@ namespace nexus{
 	G4Tubs* cathode_solid = new G4Tubs("CATHODE", (343. * mm)/2., (373. * mm)/2., (10. * mm)/2., 0., twopi);
 	G4LogicalVolume* cathode_logic = new G4LogicalVolume(cathode_solid, materials::Steel(), "CATHODE");
 
+	// EL rings
+	G4Tubs* el_ring1_solid = new G4Tubs("EL_RING1", (382. * mm)/2., (437. * mm)/2., (13. * mm)/2., 0., twopi);
+	G4Tubs* el_ring2_solid = new G4Tubs("EL_RING2", (382. * mm)/2., (437. * mm)/2., (13. * mm)/2., 0., twopi);
+	G4UnionSolid* el_rings_solid = new G4UnionSolid("EL_RINGS", el_ring1_solid, el_ring2_solid, 0, G4ThreeVector(0., 0., 19.628 * mm)); // Make sure to place from ring 1, by wall
+	G4LogicalVolume* el_rings_logic = new G4LogicalVolume(el_rings_solid, materials::Steel(), "EL_RINGS");
+
 	// Radioactive Source Encloser
         //Source
         //G4Tubs* SourceHolChamber_solid =new G4Tubs("SourceHolChamber", SourceEn_holedia/2, (SourceEn_diam/2. + SourceEn_thickn),(SourceEn_length/2. + SourceEn_thickn),0,twopi);
@@ -158,6 +165,7 @@ namespace nexus{
 	new G4PVPlacement(0, G4ThreeVector(0., 0., -436.7015 * mm), EL_logic, EL_solid->GetName(), gas_logic, false, 0, true);
 	new G4PVPlacement(0, G4ThreeVector(0., 0., -545.3015 * mm), beyondEL_logic, beyondEL_solid->GetName(), gas_logic, false, 0, true);
 	new G4PVPlacement(0, G4ThreeVector(0., 0., 392.7695 * mm), cathode_logic, cathode_solid->GetName(), gas_logic, false, 0, true);
+	new G4PVPlacement(0, G4ThreeVector(0., 0., -447.5155 * mm), el_rings_logic, el_rings_solid->GetName(), gas_logic, false, 0, true);
         //new G4PVPlacement(rm, G4ThreeVector(-SourceEn_offset,-SourceEn_offset,-SourceEn_offset), SourceHolChamber_logic, SourceHolChamber_solid->GetName(),gas_logic, false, 0, true);
         //new G4PVPlacement(rm, G4ThreeVector(-SourceEn_offset-SourceEn_length/2,-SourceEn_offset-SourceEn_length/2,-SourceEn_offset), SourceHolChamberBlock_logic, SourceHolChamberBlock_solid->GetName(),gas_logic, false, 0, true);
        // new G4PVPlacement(rm, G4ThreeVector(-SourceEn_offset,0,0), SourceHolChamber_logic, SourceHolChamber_solid->GetName(),gas_logic, false, 0, true);
@@ -193,6 +201,7 @@ namespace nexus{
 	G4LogicalVolume* Beyond = lvStore->GetVolume("BEYOND_EL");
         G4LogicalVolume* Gas = lvStore->GetVolume("GAS");
 	G4LogicalVolume* Cathode = lvStore->GetVolume("CATHODE");
+	G4LogicalVolume* EL_Rings = lvStore->GetVolume("EL_RINGS");
 
         //G4LogicalVolume* SourceHolder = lvStore->GetVolume("SourceHolChamber_logic");
         //G4LogicalVolume* SourceHolderBlock = lvStore->GetVolume("SourceHolChBlock_logic");
@@ -207,6 +216,7 @@ namespace nexus{
         //ChamberVa->SetLineStyle(G4VisAttributes::unbroken);
         Chamber->SetVisAttributes(ChamberVa);
 	Cathode->SetVisAttributes(TestVa);
+	EL_Rings->SetVisAttributes(TestVa);
 
         LabVa->SetForceWireframe(false);
         //GasVa->SetForceWireframe(false);
