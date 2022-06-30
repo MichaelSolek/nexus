@@ -109,7 +109,7 @@ namespace nexus{
 
 	// Placing the gas in the chamber and define different field regions
         G4Tubs* gas_solid = new G4Tubs("GAS", 0., chamber_diam/2., chamber_length/2., 0., twopi);
-        G4Tubs* fieldCage_solid = new G4Tubs("FIELD_CAGE", 0., Active_diam/2., (807.157 * mm)/2., 0., twopi); //length is model distance from edge of cathode to edge of nearest EL ring
+        G4Tubs* drift_solid = new G4Tubs("DRIFT", 0., Active_diam/2., (807.157 * mm)/2., 0., twopi); //length is model distance from edge of cathode to edge of nearest EL ring
 	G4Tubs* EL_solid = new G4Tubs("EL_GAP", 0., (382. * mm)/2., (6.628 * mm)/2., 0, twopi);
 	G4Tubs* beyondEL_solid = new G4Tubs("BEYOND_EL", 0., Active_diam/2., (7.022 * 25.4 * mm)/2., 0., twopi);
 
@@ -129,7 +129,7 @@ namespace nexus{
 
         gxe->SetMaterialPropertiesTable(opticalprops::GXe(gas_pressure_, 68));
         G4LogicalVolume* gas_logic = new G4LogicalVolume(gas_solid, gxe, "GAS");
-        G4LogicalVolume* fieldCage_logic = new G4LogicalVolume(fieldCage_solid, gxe, "FIELD_CAGE");
+        G4LogicalVolume* drift_logic = new G4LogicalVolume(drift_solid, gxe, "DRIFT");
 	G4LogicalVolume* EL_logic = new G4LogicalVolume(EL_solid, gxe, "EL_GAP");
 	G4LogicalVolume* beyondEL_logic = new G4LogicalVolume(beyondEL_solid, gxe, "BEYOND_EL");
 
@@ -150,7 +150,7 @@ namespace nexus{
         new G4PVPlacement(0, G4ThreeVector(),lab_logic_volume,lab_logic_volume->GetName(),0,false,0, true);
         new G4PVPlacement(0, G4ThreeVector(0., 0., 0.            ) ,chamber_logic, chamber_solid->GetName(), lab_logic_volume, false, 0,true);
         new G4PVPlacement(0, G4ThreeVector(0., 0., 0.            ), gas_logic, gas_solid->GetName(),chamber_logic, false, 0, true);
-        new G4PVPlacement(0, G4ThreeVector(0., 0., -15.8094 * mm ), fieldCage_logic, fieldCage_solid->GetName(),gas_logic, false, 0, true); // offset calculated based off model
+        new G4PVPlacement(0, G4ThreeVector(0., 0., -15.8094 * mm ), drift_logic, drift_solid->GetName(),gas_logic, false, 0, true); // offset calculated based off model
 	new G4PVPlacement(0, G4ThreeVector(0., 0., -436.7015 * mm), EL_logic, EL_solid->GetName(), gas_logic, false, 0, true);
 	new G4PVPlacement(0, G4ThreeVector(0., 0., -545.3015 * mm), beyondEL_logic, beyondEL_solid->GetName(), gas_logic, false, 0, true);
         //new G4PVPlacement(rm, G4ThreeVector(-SourceEn_offset,-SourceEn_offset,-SourceEn_offset), SourceHolChamber_logic, SourceHolChamber_solid->GetName(),gas_logic, false, 0, true);
@@ -160,11 +160,11 @@ namespace nexus{
 
 
         // Define this volume as an ionization sensitive detector
-        IonizationSD* sensdet_fc = new IonizationSD("/CRAB/FIELD_CAGE");
+        IonizationSD* sensdet_fc = new IonizationSD("/CRAB/DRIFT");
 	IonizationSD* sensdet_el = new IonizationSD("/CRAB/EL_GAP");
 	IonizationSD* sensdet_bel = new IonizationSD("/CRAB/BEYOND_EL");
         //IonizationSD* sensdet = new IonizationSD("/CRAB/GAS");
-        fieldCage_logic->SetSensitiveDetector(sensdet_fc);
+        drift_logic->SetSensitiveDetector(sensdet_fc);
 	EL_logic->SetSensitiveDetector(sensdet_el);
 	beyondEL_logic->SetSensitiveDetector(sensdet_bel);
         G4SDManager::GetSDMpointer()->AddNewDetector(sensdet_fc);
@@ -183,7 +183,7 @@ namespace nexus{
         G4LogicalVolumeStore* lvStore = G4LogicalVolumeStore::GetInstance();
         G4LogicalVolume* Chamber = lvStore->GetVolume("CHAMBER");
         G4LogicalVolume* Lab = lvStore->GetVolume("LAB");
-        G4LogicalVolume* Active = lvStore->GetVolume("FIELD_CAGE");
+        G4LogicalVolume* Active = lvStore->GetVolume("DRIFT");
 	G4LogicalVolume* EL = lvStore->GetVolume("EL_GAP");
 	G4LogicalVolume* Beyond = lvStore->GetVolume("BEYOND_EL");
         G4LogicalVolume* Gas = lvStore->GetVolume("GAS");
@@ -223,7 +223,7 @@ namespace nexus{
     G4ThreeVector CRAB::GenerateVertex(const G4String& region) const
     {
 
-        if(!(region=="LAB" || region=="GAS" || region=="FIELD_CAGE" || region=="SourceHolChamber")){
+        if(!(region=="LAB" || region=="GAS" || region=="DRIFT" || region=="SourceHolChamber")){
 
             G4Exception("[CRAB]", "GenerateVertex()", FatalException,
                         "Unknown vertex generation region.");
