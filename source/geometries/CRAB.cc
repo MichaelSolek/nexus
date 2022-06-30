@@ -113,7 +113,11 @@ namespace nexus{
 	G4Tubs* EL_solid = new G4Tubs("EL_GAP", 0., (382. * mm)/2., (6.628 * mm)/2., 0, twopi);
 	G4Tubs* beyondEL_solid = new G4Tubs("BEYOND_EL", 0., Active_diam/2., (7.022 * 25.4 * mm)/2., 0., twopi);
 
-        // Radioactive Source Encloser
+        // Cathode ring
+	G4Tubs* cathode_solid = new G4Tubs("CATHODE", (343. * mm)/2., (373. * mm)/2., (10. * mm)/2., 0., twopi);
+	G4LogicalVolume* cathode_logic = new G4LogicalVolume(cathode_solid, materials::Steel(), "CATHODE");
+
+	// Radioactive Source Encloser
         //Source
         //G4Tubs* SourceHolChamber_solid =new G4Tubs("SourceHolChamber", SourceEn_holedia/2, (SourceEn_diam/2. + SourceEn_thickn),(SourceEn_length/2. + SourceEn_thickn),0,twopi);
 	//G4Tubs* SourceHolChamberBlock_solid =new G4Tubs("SourceHolChBlock",0,(SourceEn_holedia/2),( SourceEn_thickn/2), 0.,twopi);
@@ -153,6 +157,7 @@ namespace nexus{
         new G4PVPlacement(0, G4ThreeVector(0., 0., -15.8094 * mm ), drift_logic, drift_solid->GetName(),gas_logic, false, 0, true); // offset calculated based off model
 	new G4PVPlacement(0, G4ThreeVector(0., 0., -436.7015 * mm), EL_logic, EL_solid->GetName(), gas_logic, false, 0, true);
 	new G4PVPlacement(0, G4ThreeVector(0., 0., -545.3015 * mm), beyondEL_logic, beyondEL_solid->GetName(), gas_logic, false, 0, true);
+	new G4PVPlacement(0, G4ThreeVector(0., 0., 392.7695 * mm), cathode_logic, cathode_solid->GetName(), gas_logic, false, 0, true);
         //new G4PVPlacement(rm, G4ThreeVector(-SourceEn_offset,-SourceEn_offset,-SourceEn_offset), SourceHolChamber_logic, SourceHolChamber_solid->GetName(),gas_logic, false, 0, true);
         //new G4PVPlacement(rm, G4ThreeVector(-SourceEn_offset-SourceEn_length/2,-SourceEn_offset-SourceEn_length/2,-SourceEn_offset), SourceHolChamberBlock_logic, SourceHolChamberBlock_solid->GetName(),gas_logic, false, 0, true);
        // new G4PVPlacement(rm, G4ThreeVector(-SourceEn_offset,0,0), SourceHolChamber_logic, SourceHolChamber_solid->GetName(),gas_logic, false, 0, true);
@@ -187,6 +192,7 @@ namespace nexus{
 	G4LogicalVolume* EL = lvStore->GetVolume("EL_GAP");
 	G4LogicalVolume* Beyond = lvStore->GetVolume("BEYOND_EL");
         G4LogicalVolume* Gas = lvStore->GetVolume("GAS");
+	G4LogicalVolume* Cathode = lvStore->GetVolume("CATHODE");
 
         //G4LogicalVolume* SourceHolder = lvStore->GetVolume("SourceHolChamber_logic");
         //G4LogicalVolume* SourceHolderBlock = lvStore->GetVolume("SourceHolChBlock_logic");
@@ -195,9 +201,12 @@ namespace nexus{
         G4VisAttributes *LabVa=new G4VisAttributes(G4Colour(2,2,2));
         G4VisAttributes *ActiveVa=new G4VisAttributes(G4Colour(1,1,1));
         G4VisAttributes *GasVa=new G4VisAttributes(G4Colour(2,2,2));
+	G4VisAttributes *TestVa = new G4VisAttributes(G4Colour(1,1,1));
+	TestVa->SetForceSolide(true);
         ChamberVa->SetForceWireframe(true);
         //ChamberVa->SetLineStyle(G4VisAttributes::unbroken);
         Chamber->SetVisAttributes(ChamberVa);
+	Cathode->SetVisAttribute(TestVa);
 
         LabVa->SetForceWireframe(false);
         //GasVa->SetForceWireframe(false);
