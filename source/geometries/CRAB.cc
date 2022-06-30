@@ -202,7 +202,7 @@ namespace nexus{
         G4VisAttributes *ActiveVa=new G4VisAttributes(G4Colour(1,1,1));
         G4VisAttributes *GasVa=new G4VisAttributes(G4Colour(2,2,2));
 	G4VisAttributes *TestVa = new G4VisAttributes(G4Colour(1,1,1));
-	TestVa->SetForceSolide(true);
+	TestVa->SetForceSolid(true);
         ChamberVa->SetForceWireframe(true);
         //ChamberVa->SetLineStyle(G4VisAttributes::unbroken);
         Chamber->SetVisAttributes(ChamberVa);
