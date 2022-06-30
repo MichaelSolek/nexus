@@ -206,7 +206,7 @@ namespace nexus{
         ChamberVa->SetForceWireframe(true);
         //ChamberVa->SetLineStyle(G4VisAttributes::unbroken);
         Chamber->SetVisAttributes(ChamberVa);
-	Cathode->SetVisAttribute(TestVa);
+	Cathode->SetVisAttributes(TestVa);
 
         LabVa->SetForceWireframe(false);
         //GasVa->SetForceWireframe(false);
