@@ -172,7 +172,7 @@ namespace nexus{
 	new G4PVPlacement(0, G4ThreeVector(0., 0., -545.3015 * mm), beyondEL_logic, beyondEL_solid->GetName(), gas_logic, false, 0, true);
 	new G4PVPlacement(0, G4ThreeVector(0., 0., 392.7695 * mm), cathode_logic, cathode_solid->GetName(), gas_logic, false, 0, true);
 	new G4PVPlacement(0, G4ThreeVector(0., 0., -447.5155 * mm), el_rings_logic, el_rings_solid->GetName(), gas_logic, false, 0, true);
-	new G4PVPlacement(0, G4ThreeVector(0., 0., -250.0455 * mm), reflectors_logic, reflectors_solid->GetName(), gas_logic, false, 0, true);
+	new G4PVPlacement(0, G4ThreeVector(0., 0., -250.0455 * mm), reflectors_logic, reflectors_solid->GetName(), gas_logic, false, 0, true); // Note: calculating this from the cathode decreases z-component by ~0.1 mm
         //new G4PVPlacement(rm, G4ThreeVector(-SourceEn_offset,-SourceEn_offset,-SourceEn_offset), SourceHolChamber_logic, SourceHolChamber_solid->GetName(),gas_logic, false, 0, true);
         //new G4PVPlacement(rm, G4ThreeVector(-SourceEn_offset-SourceEn_length/2,-SourceEn_offset-SourceEn_length/2,-SourceEn_offset), SourceHolChamberBlock_logic, SourceHolChamberBlock_solid->GetName(),gas_logic, false, 0, true);
        // new G4PVPlacement(rm, G4ThreeVector(-SourceEn_offset,0,0), SourceHolChamber_logic, SourceHolChamber_solid->GetName(),gas_logic, false, 0, true);
@@ -283,7 +283,7 @@ namespace nexus{
 		}
 	        G4ThreeVector position = G4ThreeVector((-radius)*cos(90.*deg-rotation), radius*sin(90.*deg-rotation), zpos);
 	        tr[i][j] = G4Transform3D(*rm[i], position);
-	        G4ExtrudedSolid* panel = new G4ExtrudedSolid("PANEL_" + std::to_string(j+1) + "-" + std::to_string(i+1), polygon, 252.*mm/2., G4TwoVector(0,0), 1, G4TwoVector(0,0), 1);
+	        G4ExtrudedSolid* panel = new G4ExtrudedSolid("PANEL_" + std::to_string(j+1) + "-" + std::to_string(i+1), polygon, halfz, G4TwoVector(0,0), 1, G4TwoVector(0,0), 1);
 	        panel_array->AddNode(panel, tr[i][j]);
 	    }
 	}
