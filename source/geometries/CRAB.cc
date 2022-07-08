@@ -319,7 +319,7 @@ namespace nexus{
 	G4double placementRadius = (185.296 + 5.004) * mm;
 	placementRadius *= 1.5;
 
-	for(int i=0; i<12; i++){
+	for(int i=0; i<1; i++){
 	    rm[i] = new G4RotationMatrix();
 	    G4double rotation = initialRotation + i*30*deg;
 	    rm[i]->rotateZ(rotation);
@@ -328,6 +328,9 @@ namespace nexus{
 	    G4ExtrudedSolid* staveOutline = new G4ExtrudedSolid("STAVE_OUTLINE_" + std::to_string(i+1), polygon, staveLength/2, G4TwoVector(0,0), 1, G4TwoVector(0,0), 1);
 	    G4Tubs* staveBase = new G4Tubs("STAVE_BASE_" + std::to_string(i+1), outerEdgeRadius-(50*mm), outerEdgeRadius, (staveLength/2) + 10*mm, twopi*23/24, twopi/12);
 	    //This intesection solid needs a transformation to move the outline so it can properly intersect
+	    G4ThreeVector intersectionPos = G4ThreeVector(outerEdgeRadius-staveHeight,0,0);
+	    G4RotationMatrix* intersectionRot = new G4RotationMatrix();
+	    intersectionRot->rotateZ(270*deg);
 	    G4IntersectionSolid* ungroovedStave = new G4IntersectionSolid("STAVE_UNGROOVED_" + std::to_string(i+1), staveBase, staveOutline);
 	    fieldCageStaves->AddNode(ungroovedStave, tr[i]);
 	}
