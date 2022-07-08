@@ -23,6 +23,7 @@
 #include <G4UnionSolid.hh>
 #include <G4MultiUnion.hh>
 #include <G4ExtrudedSolid.hh>
+#include <G4IntersectionSolid.hh>
 
 #include <CLHEP/Units/SystemOfUnits.h>
 #include <CLHEP/Units/PhysicalConstants.h>
@@ -134,6 +135,8 @@ namespace nexus{
 
 	// Field cage staves
 	G4MultiUnion* fieldCageStaves_solid = getFieldCageStaves();
+	G4LogicalVolume* fieldCageStaves_logic = new G4LogicalVolume(fieldCageStaves_solid, materials::Steel(), "FIELD_CAGE_STAVES");
+	new G4PVPlacement(0, G4ThreeVector(0,0,0), fieldCageStaves_logic, fieldCageStaves_logic->GetName(), chamber_logic, false, 0, true);
 
 	// Radioactive Source Encloser
         //Source
@@ -213,7 +216,7 @@ namespace nexus{
 	G4LogicalVolume* Cathode = lvStore->GetVolume("CATHODE");
 	G4LogicalVolume* EL_Rings = lvStore->GetVolume("EL_RINGS");
 	G4LogicalVolume* Panels = lvStore->GetVolume("REFLECTIVE_PANELS");
-//	G4LogicalVolume* TestPiece1 = lvStore->GetVolume("TEST1");
+	G4LogicalVolume* TestPiece1 = lvStore->GetVolume("FIELD_CAGE_STAVES");
 //	G4LogicalVolume* TestPiece2 = lvStore->GetVolume("TEST2");
 //	G4LogicalVolume* TestPiece3 = lvStore->GetVolume("TEST3");
 
@@ -275,9 +278,9 @@ namespace nexus{
 	G4double initialRotation = 19.60 * deg;
         G4double radius = (370.592/2. + (5.004+6.756)/2.)*mm;//1.1*(370.592/2.) * mm;
         
-	std::vector<G4TwoVector> polygon = {G4TwoVector(9.85*mm,11.76*mm/2.), G4TwoVector(4.5*mm.,-0.876*mm), G4TwoVector(101.*mm/2.,-0.876*mm),
+	std::vector<G4TwoVector> polygon = {G4TwoVector(9.85*mm,11.76*mm/2.), G4TwoVector(4.5*mm,-0.876*mm), G4TwoVector(101.*mm/2.,-0.876*mm),
 		                            G4TwoVector(98.318*mm/2.,-11.76*mm/2.), G4TwoVector(-98.317*mm/2.,-11.76*mm/2.), G4TwoVector(-101.*mm/2.,-0.876*mm),
-		                            G4TwoVector(-4.5*mm.,-0.876*mm), G4TwoVector(-9.85*mm,11.76*mm/2.)};
+		                            G4TwoVector(-4.5*mm,-0.876*mm), G4TwoVector(-9.85*mm,11.76*mm/2.)};
         for(int i=0; i<12; i++){
             rm[i] = new G4RotationMatrix();
 	    G4double rotation = initialRotation + i*30.*deg;
@@ -301,11 +304,33 @@ namespace nexus{
 	return panel_array;
     }
 
-    G4MultUnion* getFieldCageStaves(){
+    G4MultiUnion* getFieldCageStaves(){
 	G4MultiUnion* fieldCageStaves = new G4MultiUnion("FIELD_CAGE_STAVES");
 	G4RotationMatrix* rm[12];
-	G4Tranform3D* tr[12];
+	G4Transform3D tr[12];
 	std::vector<G4TwoVector> polygon = {G4TwoVector(30*mm,50*mm), G4TwoVector(30*mm, 0), G4TwoVector(4.54585*mm, 0), G4TwoVector(10.5*mm, 7*mm),
-					    G4TwoVector(-10.5*mm, 7*mm), G4TwoVector(-4.54585*m, 0), G4TwoVector(-30*mm, 0), G4TwoVector(-30*mm, 50*mm)}
+					    G4TwoVector(-10.5*mm, 7*mm), G4TwoVector(-4.54585*mm, 0), G4TwoVector(-30*mm, 0), G4TwoVector(-30*mm, 50*mm)};
+	G4double outerEdgeRadius = 235 * mm;
+	G4double grooveTopRadius = 202.8 * mm;
+	G4double staveWidth = 60 * mm;
+	G4double staveHeight = 44.7 * mm;
+	G4double staveLength = 1051 * mm;
+	G4double initialRotation = 19.60 * deg;
+	G4double placementRadius = (185.296 + 5.004) * mm;
+	placementRadius *= 1.5;
+
+	for(int i=0; i<12; i++){
+	    rm[i] = new G4RotationMatrix();
+	    G4double rotation = initialRotation + i*30*deg;
+	    rm[i]->rotateZ(rotation);
+	    G4ThreeVector position = G4ThreeVector(-placementRadius*cos(90.*deg-rotation), placementRadius*sin(90.*deg-rotation), 0);
+	    tr[i] = G4Transform3D(*rm[i], position);
+	    G4ExtrudedSolid* staveOutline = new G4ExtrudedSolid("STAVE_OUTLINE_" + std::to_string(i+1), polygon, staveLength/2, G4TwoVector(0,0), 1, G4TwoVector(0,0), 1);
+	    G4Tubs* staveBase = new G4Tubs("STAVE_BASE_" + std::to_string(i+1), outerEdgeRadius-(50*mm), outerEdgeRadius, (staveLength/2) + 10*mm, twopi*23/24, twopi/12);
+	    //This intesection solid needs a transformation to move the outline so it can properly intersect
+	    G4IntersectionSolid* ungroovedStave = new G4IntersectionSolid("STAVE_UNGROOVED_" + std::to_string(i+1), staveBase, staveOutline);
+	    fieldCageStaves->AddNode(ungroovedStave, tr[i]);
+	}
+	return fieldCageStaves;
     }
 }
