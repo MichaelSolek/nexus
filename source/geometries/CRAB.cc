@@ -96,6 +96,7 @@ namespace nexus{
     }
     
     G4MultiUnion* getReflectivePanelArray();
+    G4MultiUnion* getFieldCageStaves();
 
     void CRAB::Construct(){
 
@@ -130,6 +131,10 @@ namespace nexus{
 	// Reflective panel array
 	G4MultiUnion* reflectors_solid = getReflectivePanelArray();
         G4LogicalVolume* reflectors_logic = new G4LogicalVolume(reflectors_solid, G4NistManager::Instance()->FindOrBuildMaterial("G4_GOLD"), "REFLECTIVE_PANELS");
+
+	// Field cage staves
+	G4MultiUnion* fieldCageStaves_solid = getFieldCageStaves();
+
 	// Radioactive Source Encloser
         //Source
         //G4Tubs* SourceHolChamber_solid =new G4Tubs("SourceHolChamber", SourceEn_holedia/2, (SourceEn_diam/2. + SourceEn_thickn),(SourceEn_length/2. + SourceEn_thickn),0,twopi);
@@ -155,8 +160,6 @@ namespace nexus{
 
         //G4LogicalVolume* SourceHolChamber_logic = new G4LogicalVolume(SourceHolChamber_solid,materials::Steel(), "SourceHolChamber_logic");
         //G4LogicalVolume* SourceHolChamberBlock_logic = new G4LogicalVolume(SourceHolChamberBlock_solid,materials::Steel(), "SourceHolChBlock_logic");
-
-
 
         //Rotation Matrix
         G4RotationMatrix* rm = new G4RotationMatrix();
@@ -210,6 +213,9 @@ namespace nexus{
 	G4LogicalVolume* Cathode = lvStore->GetVolume("CATHODE");
 	G4LogicalVolume* EL_Rings = lvStore->GetVolume("EL_RINGS");
 	G4LogicalVolume* Panels = lvStore->GetVolume("REFLECTIVE_PANELS");
+//	G4LogicalVolume* TestPiece1 = lvStore->GetVolume("TEST1");
+//	G4LogicalVolume* TestPiece2 = lvStore->GetVolume("TEST2");
+//	G4LogicalVolume* TestPiece3 = lvStore->GetVolume("TEST3");
 
         //G4LogicalVolume* SourceHolder = lvStore->GetVolume("SourceHolChamber_logic");
         //G4LogicalVolume* SourceHolderBlock = lvStore->GetVolume("SourceHolChBlock_logic");
@@ -226,6 +232,9 @@ namespace nexus{
 	Cathode->SetVisAttributes(TestVa);
 	EL_Rings->SetVisAttributes(TestVa);
 	Panels->SetVisAttributes(TestVa);
+//	TestPiece1->SetVisAttributes(TestVa);
+//	TestPiece2->SetVisAttributes(TestVa);
+//	TestPiece3->SetVisAttributes(TestVa);
 
         LabVa->SetForceWireframe(false);
         //GasVa->SetForceWireframe(false);
@@ -266,9 +275,9 @@ namespace nexus{
 	G4double initialRotation = 19.60 * deg;
         G4double radius = (370.592/2. + (5.004+6.756)/2.)*mm;//1.1*(370.592/2.) * mm;
         
-	std::vector<G4TwoVector> polygon = {G4TwoVector(20.20*mm/2.,11.76*mm/2.), G4TwoVector(12.94*mm/2.,-0.876*mm), G4TwoVector(101.*mm/2.,-0.876*mm),
+	std::vector<G4TwoVector> polygon = {G4TwoVector(9.85*mm,11.76*mm/2.), G4TwoVector(4.5*mm.,-0.876*mm), G4TwoVector(101.*mm/2.,-0.876*mm),
 		                            G4TwoVector(98.318*mm/2.,-11.76*mm/2.), G4TwoVector(-98.317*mm/2.,-11.76*mm/2.), G4TwoVector(-101.*mm/2.,-0.876*mm),
-		                            G4TwoVector(-12.94*mm/2.,-0.876*mm), G4TwoVector(-20.20*mm/2.,11.76*mm/2.)};
+		                            G4TwoVector(-4.5*mm.,-0.876*mm), G4TwoVector(-9.85*mm,11.76*mm/2.)};
         for(int i=0; i<12; i++){
             rm[i] = new G4RotationMatrix();
 	    G4double rotation = initialRotation + i*30.*deg;
@@ -290,5 +299,13 @@ namespace nexus{
 
 	panel_array->Voxelize();
 	return panel_array;
+    }
+
+    G4MultUnion* getFieldCageStaves(){
+	G4MultiUnion* fieldCageStaves = new G4MultiUnion("FIELD_CAGE_STAVES");
+	G4RotationMatrix* rm[12];
+	G4Tranform3D* tr[12];
+	std::vector<G4TwoVector> polygon = {G4TwoVector(30*mm,50*mm), G4TwoVector(30*mm, 0), G4TwoVector(4.54585*mm, 0), G4TwoVector(10.5*mm, 7*mm),
+					    G4TwoVector(-10.5*mm, 7*mm), G4TwoVector(-4.54585*m, 0), G4TwoVector(-30*mm, 0), G4TwoVector(-30*mm, 50*mm)}
     }
 }
