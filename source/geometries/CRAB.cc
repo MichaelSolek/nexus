@@ -131,7 +131,7 @@ namespace nexus{
 
 	// Reflective panel array
 	G4MultiUnion* reflectors_solid = getReflectivePanelArray();
-        G4LogicalVolume* reflectors_logic = new G4LogicalVolume(reflectors_solid, G4NistManager::Instance()->FindOrBuildMaterial("G4_GOLD"), "REFLECTIVE_PANELS");
+        G4LogicalVolume* reflectors_logic = new G4LogicalVolume(reflectors_solid, materials::Steel(), "REFLECTIVE_PANELS"); // Not the right material. Needs to be changed. Gold, I think?
 
 	// Field cage staves
 	printf("Make staves solid\n");
@@ -142,7 +142,7 @@ namespace nexus{
 	printf("Place staves, memory location %p\n", (void *)fieldCageStaves_logic);
 	printf(fieldCageStaves_logic->GetName());
 	printf("\n");
-	new G4PVPlacement(0, G4ThreeVector(1000*mm,0,0), fieldCageStaves_logic, fieldCageStaves_logic->GetName(), chamber_logic, false, 0, true);
+	new G4PVPlacement(0, G4ThreeVector(0,0,121.2685*mm), fieldCageStaves_logic, fieldCageStaves_logic->GetName(), chamber_logic, false, 0, true);
         printf("Staves placed\n");
 	// Radioactive Source Encloser
         //Source
@@ -222,7 +222,7 @@ namespace nexus{
 	G4LogicalVolume* Cathode = lvStore->GetVolume("CATHODE");
 	G4LogicalVolume* EL_Rings = lvStore->GetVolume("EL_RINGS");
 	G4LogicalVolume* Panels = lvStore->GetVolume("REFLECTIVE_PANELS");
-	G4LogicalVolume* TestPiece1 = lvStore->GetVolume("FIELD_CAGE_STAVES");
+	G4LogicalVolume* FieldCageStaves = lvStore->GetVolume("FIELD_CAGE_STAVES");
 //	G4LogicalVolume* TestPiece2 = lvStore->GetVolume("TEST2");
 //	G4LogicalVolume* TestPiece3 = lvStore->GetVolume("TEST3");
 
@@ -241,14 +241,14 @@ namespace nexus{
 	Cathode->SetVisAttributes(TestVa);
 	EL_Rings->SetVisAttributes(TestVa);
 	Panels->SetVisAttributes(TestVa);
-	TestPiece1->SetVisAttributes(TestVa);
+	FieldCageStaves->SetVisAttributes(TestVa);
 //	TestPiece2->SetVisAttributes(TestVa);
 //	TestPiece3->SetVisAttributes(TestVa);
 
         LabVa->SetForceWireframe(false);
         //GasVa->SetForceWireframe(false);
         GasVa->SetForceWireframe(true);
-        ActiveVa->SetForceCloud(true);
+        ActiveVa->SetForceCloud(false);
         Active->SetVisAttributes(ActiveVa);
 	Beyond->SetVisAttributes(ActiveVa);
 	EL->SetVisAttributes(ActiveVa);
@@ -282,11 +282,11 @@ namespace nexus{
 	G4RotationMatrix* rm[12];
 	G4Transform3D tr[12][4];
 	G4double initialRotation = 19.60 * deg;
-        G4double radius = (370.592/2. + (5.004+6.756)/2.)*mm;//1.1*(370.592/2.) * mm;
+        G4double radius = (370.592/2. + (5.004+6.756)/2.)*mm;//~191.176mm
         
-	std::vector<G4TwoVector> polygon = {G4TwoVector(9.85*mm,11.76*mm/2.), G4TwoVector(4.5*mm,-0.876*mm), G4TwoVector(101.*mm/2.,-0.876*mm),
+	std::vector<G4TwoVector> polygon = {G4TwoVector(9.85*mm,11.76*mm/2.), G4TwoVector(4*mm,-0.876*mm), G4TwoVector(101.*mm/2.,-0.876*mm),
 		                            G4TwoVector(98.318*mm/2.,-11.76*mm/2.), G4TwoVector(-98.317*mm/2.,-11.76*mm/2.), G4TwoVector(-101.*mm/2.,-0.876*mm),
-		                            G4TwoVector(-4.5*mm,-0.876*mm), G4TwoVector(-9.85*mm,11.76*mm/2.)};
+		                            G4TwoVector(-4*mm,-0.876*mm), G4TwoVector(-9.85*mm,11.76*mm/2.)};
         for(int i=0; i<12; i++){
             rm[i] = new G4RotationMatrix();
 	    G4double rotation = initialRotation + i*30.*deg;
@@ -325,26 +325,28 @@ namespace nexus{
 	G4double placementRadius = (185.296 + 5.004) * mm;
 	//placementRadius *= 1.5;
 
-	for(int i=0; i<1; i++){
+	for(int i=0; i<12; i++){
 	    printf("Beginning construction loop\n");
 	    rm[i] = new G4RotationMatrix();
-	    G4double rotation = initialRotation + i*30*deg;
+	    // These must be placed in specific positions as certain staves require certain unique modifications, unlike the reflective panels.
+	    G4double rotation = initialRotation + (i-4)*30*deg;
 	    rm[i]->rotateZ(rotation);
-	    G4ThreeVector position = G4ThreeVector(-placementRadius*cos(90.*deg-rotation), placementRadius*sin(90.*deg-rotation), 0);
+	    G4ThreeVector position = G4ThreeVector(0,0,0);//(-placementRadius*cos(90.*deg-rotation), placementRadius*sin(90.*deg-rotation), 0);
 	    tr[i] = G4Transform3D(*rm[i], position);
 	    printf("Beginning construction of stave outline\n");
 	    G4ExtrudedSolid* staveOutline = new G4ExtrudedSolid("STAVE_OUTLINE_" + std::to_string(i+1), polygon, staveLength/2, G4TwoVector(0,0), 1, G4TwoVector(0,0), 1);
 	    printf("Beginning construction of stave base\n");
-	    G4Tubs* staveBase = new G4Tubs("STAVE_BASE_" + std::to_string(i+1), 0/*outerEdgeRadius-(50*mm)*/, outerEdgeRadius, (staveLength/2) + 10*mm, 0, twopi); //twopi*23/24, twopi/12);
+	    G4Tubs* staveBase = new G4Tubs("STAVE_BASE_" + std::to_string(i+1), outerEdgeRadius-(50*mm), outerEdgeRadius, (staveLength/2) + 10*mm, 0, twopi); //twopi*23/24, twopi/12);
 	    //This intesection solid needs a transformation to move the outline so it can properly intersect
 	    G4ThreeVector intersectionPos = G4ThreeVector(outerEdgeRadius-staveHeight,0,0);
 	    G4RotationMatrix* intersectionRot = new G4RotationMatrix();
-	    intersectionRot->rotateZ(270*deg);
-	    G4IntersectionSolid* ungroovedStave = new G4IntersectionSolid("STAVE_UNGROOVED_" + std::to_string(i+1), staveBase, staveOutline);
+	    intersectionRot->rotateZ(90*deg);
+	    G4IntersectionSolid* ungroovedStave = new G4IntersectionSolid("STAVE_UNGROOVED_" + std::to_string(i+1), staveBase, staveOutline, intersectionRot, intersectionPos);
 	    fieldCageStaves->AddNode(ungroovedStave, tr[i]);
 	    //fieldCageStaves->AddNode(staveBase, G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,0)));
 	    //fieldCageStaves->AddNode(staveOutline, tr[i]);
 	}
+	fieldCageStaves->Voxelize();
 	printf("Returning results\n");
 	return fieldCageStaves;
     }
