@@ -97,7 +97,7 @@ namespace nexus{
     }
     
     G4MultiUnion* getReflectivePanelArray();
-    G4MultiUnion* getFieldCageStaves();
+    G4SubtractionSolid* getFieldCageStaves();
 
     void CRAB::Construct(){
 
@@ -134,16 +134,9 @@ namespace nexus{
         G4LogicalVolume* reflectors_logic = new G4LogicalVolume(reflectors_solid, materials::Steel(), "REFLECTIVE_PANELS"); // Not the right material. Needs to be changed. Gold, I think?
 
 	// Field cage staves
-	printf("Make staves solid\n");
-	//G4Tubs* fieldCageStaves_solid = new G4Tubs("STAVES_TEST", 185 * mm, 235*mm, 100*mm, twopi*23/24, twopi/12);
-	G4MultiUnion* fieldCageStaves_solid = getFieldCageStaves();
-	printf("Solid at memory location %p, Assign logical volume\n", (void *)fieldCageStaves_solid);
+	G4SubtractionSolid* fieldCageStaves_solid = getFieldCageStaves();
 	G4LogicalVolume* fieldCageStaves_logic = new G4LogicalVolume(fieldCageStaves_solid, materials::Steel(), "FIELD_CAGE_STAVES");
-	printf("Place staves, memory location %p\n", (void *)fieldCageStaves_logic);
-	printf(fieldCageStaves_logic->GetName());
-	printf("\n");
 	new G4PVPlacement(0, G4ThreeVector(0,0,121.2685*mm), fieldCageStaves_logic, fieldCageStaves_logic->GetName(), chamber_logic, false, 0, true);
-        printf("Staves placed\n");
 	// Radioactive Source Encloser
         //Source
         //G4Tubs* SourceHolChamber_solid =new G4Tubs("SourceHolChamber", SourceEn_holedia/2, (SourceEn_diam/2. + SourceEn_thickn),(SourceEn_length/2. + SourceEn_thickn),0,twopi);
@@ -310,8 +303,12 @@ namespace nexus{
 	return panel_array;
     }
 
-    G4MultiUnion* getFieldCageStaves(){
-	G4MultiUnion* fieldCageStaves = new G4MultiUnion("FIELD_CAGE_STAVES");
+    G4SubtractionSolid* getFieldCageStaves(){
+	// Define shapes used  to construct the field cage staves
+	G4MultiUnion* blankFieldCageStaves = new G4MultiUnion("BLANK_FIELD_CAGE_STAVES");
+	G4MultiUnion* subRings = new G4MultiUnion("SUBTRACTION_RINGS");
+	G4SubtractionSolid* fieldCageStaves;
+
 	G4RotationMatrix* rm[12];
 	G4Transform3D tr[12];
 	std::vector<G4TwoVector> polygon = {G4TwoVector(30*mm,50*mm), G4TwoVector(30*mm, 0), G4TwoVector(4.54585*mm, 0), G4TwoVector(10.5*mm, 7*mm),
@@ -325,29 +322,47 @@ namespace nexus{
 	G4double placementRadius = (185.296 + 5.004) * mm;
 	//placementRadius *= 1.5;
 
+	// Build the blank staves with no notches and place them. No further nodes required, so voxelize it.
 	for(int i=0; i<12; i++){
-	    printf("Beginning construction loop\n");
 	    rm[i] = new G4RotationMatrix();
 	    // These must be placed in specific positions as certain staves require certain unique modifications, unlike the reflective panels.
 	    G4double rotation = initialRotation + (i-4)*30*deg;
 	    rm[i]->rotateZ(rotation);
 	    G4ThreeVector position = G4ThreeVector(0,0,0);//(-placementRadius*cos(90.*deg-rotation), placementRadius*sin(90.*deg-rotation), 0);
 	    tr[i] = G4Transform3D(*rm[i], position);
-	    printf("Beginning construction of stave outline\n");
 	    G4ExtrudedSolid* staveOutline = new G4ExtrudedSolid("STAVE_OUTLINE_" + std::to_string(i+1), polygon, staveLength/2, G4TwoVector(0,0), 1, G4TwoVector(0,0), 1);
-	    printf("Beginning construction of stave base\n");
 	    G4Tubs* staveBase = new G4Tubs("STAVE_BASE_" + std::to_string(i+1), outerEdgeRadius-(50*mm), outerEdgeRadius, (staveLength/2) + 10*mm, 0, twopi); //twopi*23/24, twopi/12);
 	    //This intesection solid needs a transformation to move the outline so it can properly intersect
 	    G4ThreeVector intersectionPos = G4ThreeVector(outerEdgeRadius-staveHeight,0,0);
 	    G4RotationMatrix* intersectionRot = new G4RotationMatrix();
 	    intersectionRot->rotateZ(90*deg);
 	    G4IntersectionSolid* ungroovedStave = new G4IntersectionSolid("STAVE_UNGROOVED_" + std::to_string(i+1), staveBase, staveOutline, intersectionRot, intersectionPos);
-	    fieldCageStaves->AddNode(ungroovedStave, tr[i]);
+	    blankFieldCageStaves->AddNode(ungroovedStave, tr[i]);
 	    //fieldCageStaves->AddNode(staveBase, G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,0)));
 	    //fieldCageStaves->AddNode(staveOutline, tr[i]);
 	}
-	fieldCageStaves->Voxelize();
-	printf("Returning results\n");
+	blankFieldCageStaves->Voxelize();
+	
+	// Make a set of rings to  use in a subtraction to cut all the notches that appear in all staves
+	// 4 widely spaced notches towards right end of design drawing
+	for(int i=0; i<4; i++){
+	    G4double zpos = -(1051*mm)/2. + 69*mm + i*38*mm;
+	    G4Tubs* ring = new G4Tubs("SUBTRACTION_RING_" + std::to_string(i), grooveTopRadius, outerEdgeRadius + 5*mm, 10.5*mm/2., 0, twopi);
+	    //G4RotationMatrix* testRot = new G4RotationMatrix();
+	    //G4Transform3D testTrans = G4Transform3D(testRot, G4ThreeVector(0,0,0));
+	    subRings->AddNode(ring, G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,zpos)));
+	}
+	// 31 tightly spaced notches finishing near the left end of the design drawing
+	for(int i=0; i<31; i++){
+	    G4double zpos = -(1051*mm)/2. + 285*mm + i*24*mm;
+	    G4Tubs* ring = new G4Tubs("SUBTRACTION_RING_" + std::to_string(i), grooveTopRadius, outerEdgeRadius + 5*mm, 10.5*mm/2., 0, twopi);
+	    subRings->AddNode(ring, G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,zpos)));
+	}
+	subRings->Voxelize();
+	
+	// Make the subtraction and return it
+	fieldCageStaves = new G4SubtractionSolid("FIELD_CAGE_STAVES", blankFieldCageStaves, subRings);
+
 	return fieldCageStaves;
     }
 }
