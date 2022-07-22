@@ -347,7 +347,7 @@ namespace nexus{
 	// Make a set of rings to  use in a subtraction to cut all the notches that appear in all staves
 	// 4 widely spaced notches towards right end of design drawing
 	for(int i=0; i<4; i++){
-	    G4double zpos = -(1051*mm)/2. + 69*mm + i*38*mm;
+	    G4double zpos = (1051*mm)/2. - 69*mm - i*38*mm;
 	    G4Tubs* ring = new G4Tubs("SUBTRACTION_RING_" + std::to_string(i), grooveTopRadius, outerEdgeRadius + 5*mm, 10.5*mm/2., 0, twopi);
 	    //G4RotationMatrix* testRot = new G4RotationMatrix();
 	    //G4Transform3D testTrans = G4Transform3D(testRot, G4ThreeVector(0,0,0));
@@ -355,7 +355,7 @@ namespace nexus{
 	}
 	// 31 tightly spaced notches finishing near the left end of the design drawing
 	for(int i=0; i<31; i++){
-	    G4double zpos = -(1051*mm)/2. + 285*mm + i*24*mm;
+	    G4double zpos = (1051*mm)/2. - 285*mm - i*24*mm;
 	    G4Tubs* ring = new G4Tubs("SUBTRACTION_RING_" + std::to_string(i), grooveTopRadius, outerEdgeRadius + 5*mm, 10.5*mm/2., 0, twopi);
 	    subRings->AddNode(ring, G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,zpos)));
 	}
@@ -371,17 +371,17 @@ namespace nexus{
         G4Tubs* notch106_5 =new G4Tubs("STAVE_NOTCH_106_5_MM",grooveTopRadius, outerEdgeRadius + 5*mm, 106.5*mm/2., twopi*39/40, twopi/20);
         G4MultiUnion* uniqueNotches = new G4MultiUnion("PER_STAVE_SUBTRACTIONS");
 	// Placement is not predictably even; have to place each manually
-        uniqueNotches->AddNode(notch58_5, G4Transform3D(*rm[0], G4ThreeVector(0,0,(663.8+58.5/2)*mm-staveLength/2.)));
-        uniqueNotches->AddNode(notch82_5, G4Transform3D(*rm[1], G4ThreeVector(0,0,(591.8+82.5/2)*mm-staveLength/2.)));
-        uniqueNotches->AddNode(notch82_5, G4Transform3D(*rm[2], G4ThreeVector(0,0,(519.8+82.5/2)*mm-staveLength/2.)));
-        uniqueNotches->AddNode(notch82_5, G4Transform3D(*rm[3], G4ThreeVector(0,0,(447.8+82.5/2)*mm-staveLength/2.)));
-        uniqueNotches->AddNode(notch82_5, G4Transform3D(*rm[4], G4ThreeVector(0,0,(375.8+82.5/2)*mm-staveLength/2.)));
-        uniqueNotches->AddNode(notch58_5, G4Transform3D(*rm[5], G4ThreeVector(0,0,(327.8+58.5/2)*mm-staveLength/2.)));
-        uniqueNotches->AddNode(notch51  , G4Transform3D(*rm[6], G4ThreeVector(0,0,(263.3+51.0/2)*mm-staveLength/2.)));
-        uniqueNotches->AddNode(notch106_5,G4Transform3D(*rm[8], G4ThreeVector(0,0,(903.8+106.5/2)*mm-staveLength/2.)));
-        uniqueNotches->AddNode(notch58_5, G4Transform3D(*rm[9], G4ThreeVector(0,0,(855.8+58.5/2)*mm-staveLength/2.)));
-        uniqueNotches->AddNode(notch82_5, G4Transform3D(*rm[10], G4ThreeVector(0,0,(738.8+82.5/2)*mm-staveLength/2.)));
-        uniqueNotches->AddNode(notch82_5, G4Transform3D(*rm[11], G4ThreeVector(0,0,(711.8+82.5/2)*mm-staveLength/2.)));
+        uniqueNotches->AddNode(notch58_5, G4Transform3D(*rm[0], G4ThreeVector(0,0,staveLength/2.-(663.8+58.5/2)*mm)));
+        uniqueNotches->AddNode(notch82_5, G4Transform3D(*rm[1], G4ThreeVector(0,0,staveLength/2.-(591.8+82.5/2)*mm)));
+        uniqueNotches->AddNode(notch82_5, G4Transform3D(*rm[2], G4ThreeVector(0,0,staveLength/2.-(519.8+82.5/2)*mm)));
+        uniqueNotches->AddNode(notch82_5, G4Transform3D(*rm[3], G4ThreeVector(0,0,staveLength/2.-(447.8+82.5/2)*mm)));
+        uniqueNotches->AddNode(notch82_5, G4Transform3D(*rm[4], G4ThreeVector(0,0,staveLength/2.-(375.8+82.5/2)*mm)));
+        uniqueNotches->AddNode(notch58_5, G4Transform3D(*rm[5], G4ThreeVector(0,0,staveLength/2.-(327.8+58.5/2)*mm)));
+        uniqueNotches->AddNode(notch51  , G4Transform3D(*rm[6], G4ThreeVector(0,0,staveLength/2.-(263.3+51.0/2)*mm)));
+        uniqueNotches->AddNode(notch106_5,G4Transform3D(*rm[8], G4ThreeVector(0,0,staveLength/2.-(903.8+106.5/2)*mm)));
+        uniqueNotches->AddNode(notch58_5, G4Transform3D(*rm[9], G4ThreeVector(0,0,staveLength/2.-(855.8+58.5/2)*mm)));
+        uniqueNotches->AddNode(notch82_5, G4Transform3D(*rm[10], G4ThreeVector(0,0,staveLength/2.-(738.8+82.5/2)*mm)));
+        uniqueNotches->AddNode(notch82_5, G4Transform3D(*rm[11], G4ThreeVector(0,0,(staveLength/2.-711.8+82.5/2)*mm)));
 	uniqueNotches->Voxelize();
 
 	fieldCageStaves = new G4SubtractionSolid("FIELD_CAGE_STAVES", baseFieldCageStaves, uniqueNotches);
