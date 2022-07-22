@@ -98,8 +98,17 @@ namespace nexus{
     
     G4MultiUnion* getReflectivePanelArray();
     G4SubtractionSolid* getFieldCageStaves();
-
+    G4MultiUnion* getBufferDriftCopperRingAssembly();
+    
     void CRAB::Construct(){
+
+	//Define required unimplemented materials
+	G4Element* elCu = new G4Element("Copper", "Cu", 29, 63.546*g/mole);
+	G4Element* elAu = new G4Element("Gold", "Au", 79, 196.97*g/mole);
+	G4Material* Copper = new G4Material("Copper", 8.960*g/cm3, 1);
+	Copper->AddElement(elCu, 1);
+	G4Material* Gold = new G4Material("Gold", 19.3*g/cm3, 1);
+	Gold->AddElement(elAu, 1);
 
 	//Constructing Lab Space
         G4String lab_name="LAB";
@@ -131,12 +140,32 @@ namespace nexus{
 
 	// Reflective panel array
 	G4MultiUnion* reflectors_solid = getReflectivePanelArray();
-        G4LogicalVolume* reflectors_logic = new G4LogicalVolume(reflectors_solid, materials::Steel(), "REFLECTIVE_PANELS"); // Not the right material. Needs to be changed. Gold, I think?
+        G4LogicalVolume* reflectors_logic = new G4LogicalVolume(reflectors_solid, Gold, "REFLECTIVE_PANELS"); // Not the right material. Needs to be changed. Gold, I think?
 
 	// Field cage staves
 	G4SubtractionSolid* fieldCageStaves_solid = getFieldCageStaves();
 	G4LogicalVolume* fieldCageStaves_logic = new G4LogicalVolume(fieldCageStaves_solid, materials::Steel(), "FIELD_CAGE_STAVES");
 	new G4PVPlacement(0, G4ThreeVector(0,0,121.2685*mm), fieldCageStaves_logic, fieldCageStaves_logic->GetName(), chamber_logic, false, 0, true);
+	
+	// Buffer-Drift Copper Ring Assembly
+	G4MultiUnion* bufferDriftCopperRingAssembly_solid = getBufferDriftCopperRingAssembly();
+	G4LogicalVolume* bufferDriftCopperRingAssembly_logic = new G4LogicalVolume(bufferDriftCopperRingAssembly_solid, Copper, "BUFFER-DRIFT_COPPER_RING_ASSEMBLY"); 
+	new G4PVPlacement(0, G4ThreeVector(0,0,0), bufferDriftCopperRingAssembly_logic, bufferDriftCopperRingAssembly_logic->GetName(), chamber_logic, false, 0, true);
+
+	// Poly insulation assembly
+	G4MultiUnion* polyInsulationAssembly_solid = new G4MultiUnion("POLY_INSULATION_ASSEMBLY");
+	G4Tubs* innerPolyInsulation = new G4Tubs("POLY_INSULATION_INNER", 470/2*mm, (470/2+6.35)*mm, 960/2*mm, twopi*(1-0.9933)/2, twopi*0.9933);
+	G4Tubs* outerPolyInsulation = new G4Tubs("POLY_INSULATION_OUTER", 482.7/2*mm, (482.6/2+6.35)*mm, 960/2*mm, twopi*(1-0.9933)/2, twopi*0.9933);
+	G4RotationMatrix* innerPolyRot = new G4RotationMatrix();
+	innerPolyRot->rotateZ(twopi/8);
+	G4RotationMatrix* outerPolyRot = new G4RotationMatrix();
+	outerPolyRot->rotateZ(twopi*5/8);
+	polyInsulationAssembly_solid->AddNode(innerPolyInsulation, G4Transform3D(*innerPolyRot, G4ThreeVector(0,0,0)));
+	polyInsulationAssembly_solid->AddNode(outerPolyInsulation, G4Transform3D(*outerPolyRot, G4ThreeVector(0,0,0)));
+	polyInsulationAssembly_solid->Voxelize();
+	G4LogicalVolume* polyInsulationAssembly_logic = new G4LogicalVolume(polyInsulationAssembly_solid, materials::HDPE(), "POLY_INSULATION_ASSEMBLY");
+	new G4PVPlacement(0, G4ThreeVector(0,0,166.7685*mm), polyInsulationAssembly_logic, polyInsulationAssembly_logic->GetName(), chamber_logic, false, 0, true);
+
 	// Radioactive Source Encloser
         //Source
         //G4Tubs* SourceHolChamber_solid =new G4Tubs("SourceHolChamber", SourceEn_holedia/2, (SourceEn_diam/2. + SourceEn_thickn),(SourceEn_length/2. + SourceEn_thickn),0,twopi);
@@ -216,7 +245,7 @@ namespace nexus{
 	G4LogicalVolume* EL_Rings = lvStore->GetVolume("EL_RINGS");
 	G4LogicalVolume* Panels = lvStore->GetVolume("REFLECTIVE_PANELS");
 	G4LogicalVolume* FieldCageStaves = lvStore->GetVolume("FIELD_CAGE_STAVES");
-//	G4LogicalVolume* TestPiece2 = lvStore->GetVolume("TEST2");
+	G4LogicalVolume* CopperRings = lvStore->GetVolume("BUFFER-DRIFT_COPPER_RING_ASSEMBLY");
 //	G4LogicalVolume* TestPiece3 = lvStore->GetVolume("TEST3");
 
         //G4LogicalVolume* SourceHolder = lvStore->GetVolume("SourceHolChamber_logic");
@@ -235,7 +264,7 @@ namespace nexus{
 	EL_Rings->SetVisAttributes(TestVa);
 	Panels->SetVisAttributes(TestVa);
 	FieldCageStaves->SetVisAttributes(TestVa);
-//	TestPiece2->SetVisAttributes(TestVa);
+	CopperRings->SetVisAttributes(TestVa);
 //	TestPiece3->SetVisAttributes(TestVa);
 
         LabVa->SetForceWireframe(false);
@@ -347,7 +376,7 @@ namespace nexus{
 	// Make a set of rings to  use in a subtraction to cut all the notches that appear in all staves
 	// 4 widely spaced notches towards right end of design drawing
 	for(int i=0; i<4; i++){
-	    G4double zpos = (1051*mm)/2. - 69*mm - i*38*mm;
+	    G4double zpos = (1051*mm)/2. - 69*mm - i*48*mm;
 	    G4Tubs* ring = new G4Tubs("SUBTRACTION_RING_" + std::to_string(i), grooveTopRadius, outerEdgeRadius + 5*mm, 10.5*mm/2., 0, twopi);
 	    //G4RotationMatrix* testRot = new G4RotationMatrix();
 	    //G4Transform3D testTrans = G4Transform3D(testRot, G4ThreeVector(0,0,0));
@@ -388,5 +417,37 @@ namespace nexus{
 
 
 	return fieldCageStaves;
+    }
+
+    // The origin of the resulting piece should be the origin of the overall space. Consider rewriting a bit to place origin relative to some
+    // piece here like the first ring or something. Sort of odd to be the only piece placed at the origin, and those sorts of inconsistencies
+    // make it hard to read and maintain the code.
+    G4MultiUnion* getBufferDriftCopperRingAssembly(){
+	// Define key dimensions and geometric components
+	G4double innerRadius = 203 * mm;
+	G4double outerRadius = 215 * mm;
+	G4double thickness = 10 * mm;
+	G4double zpos;
+	G4Transform3D tr[35];
+	G4MultiUnion* assembly = new G4MultiUnion("BUFFER-DRIFT_COPPER_RING_ASSEMBLY");
+
+	// Place the tightly packed rings towards th/e EL end
+	zpos = (232.356 + 46 - 50.125*25.4/2) * mm; // distance wall to staves + distance stave start to first ring - origin to wall
+	for(int i=0; i<31; i++){
+	    zpos = (232.356 + 46 - 50.125*25.4/2) * mm + i*24*mm; // distance wall to staves + distance stave start to first ring - origin to wall, plus ring-specific offset
+	    G4Tubs* copperRing = new G4Tubs("COPPER_RING_" + std::to_string(i+1), innerRadius, outerRadius, thickness/2., 0, twopi);
+	    tr[i] = G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,zpos));
+	    assembly->AddNode(*copperRing, tr[i]);	    
+	}
+
+	// Place the widely spaced rings
+	for(int i=31; i < 35; i++){
+	    zpos = (232.356 + 838 - 50.125*25.4/2) * mm + (i-31)*48*mm; // distance wall to staves + distance stave start to first wide-spaced ring - origin to wall
+	    G4Tubs* copperRing = new G4Tubs("COPPER_RING_" + std::to_string(i+1), innerRadius, outerRadius, thickness/2., 0, twopi);
+	    tr[i] = G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,zpos));
+	    assembly->AddNode(*copperRing, tr[i]);
+	}
+	assembly->Voxelize();
+	return assembly;
     }
 }
