@@ -187,7 +187,19 @@ namespace nexus{
 	G4LogicalVolume* beyondEL_logic = new G4LogicalVolume(beyondEL_solid, gxe, "BEYOND_EL");
 
 
-        //G4LogicalVolume* SourceHolderGas_logic = new G4LogicalVolume(SourceHolderGas_solid, gxe, "SourceHolderGAS_logic");
+        // EL gap field
+	UniformElectricDriftField* el_field = new UniformElectricDriftField();
+	//el_field->SetCathodePosition(00);
+	//el_field->SetAnodePosition(00);
+	el_field->SetDriftVelocity(5.*mm/microsecond);
+	el_field->SetTransverseDiffusion(1.*mm/sqrt(cm));
+	el_field->SetLongitudinalDiffusion(.5*mm/sqrt(cm));
+	el_field->SetLightYield(1000./cm);
+	G4Region* el_region = new G4Region("EL_REGION");
+	el_region->SetUserInformation(el_field);
+	el_region->AddRootLogicalVolume(EL_logic);
+
+	//G4LogicalVolume* SourceHolderGas_logic = new G4LogicalVolume(SourceHolderGas_solid, gxe, "SourceHolderGAS_logic");
 
         //G4LogicalVolume* SourceHolChamber_logic = new G4LogicalVolume(SourceHolChamber_solid,materials::Steel(), "SourceHolChamber_logic");
         //G4LogicalVolume* SourceHolChamberBlock_logic = new G4LogicalVolume(SourceHolChamberBlock_solid,materials::Steel(), "SourceHolChBlock_logic");
