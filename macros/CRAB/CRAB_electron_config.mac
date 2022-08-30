@@ -15,8 +15,8 @@
 # GENERATOR
 /Generator/SingleParticle/max_energy 31 keV
 /Generator/SingleParticle/min_energy 31 keV
-/Generator/SingleParticle/region LAB
-/Generator/SingleParticle/particle gamma
+/Generator/SingleParticle/region DRIFT
+/Generator/SingleParticle/particle e-
 /Generator/SingleParticle/momentum 1 0 0
 
 #Actions
