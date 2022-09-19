@@ -107,6 +107,7 @@ namespace nexus{
 	G4Element* elAu = new G4Element("Gold", "Au", 79, 196.97*g/mole);
 	G4Material* Copper = new G4Material("Copper", 8.960*g/cm3, 1);
 	Copper->AddElement(elCu, 1);
+	// GOLD NEEDS TO BE REPLACED WITH TEFLON. FIND REPLACEMENT MATERIAL AND REMOVE THE FOLLOWING 2 LINES
 	G4Material* Gold = new G4Material("Gold", 19.3*g/cm3, 1);
 	Gold->AddElement(elAu, 1);
 
@@ -186,12 +187,25 @@ namespace nexus{
 	G4LogicalVolume* EL_logic = new G4LogicalVolume(EL_solid, gxe, "EL_GAP");
 	G4LogicalVolume* beyondEL_logic = new G4LogicalVolume(beyondEL_solid, gxe, "BEYOND_EL");
 
+	
+	// Drift field
+	UniformElectricDriftField* drift_field = new UniformElectricDriftField();
+	drift_field->SetCathodePosition(-807*mm/2.);
+	drift_field->SetAnodePosition(807*mm/2.);
+	drift_field->SetDriftVelocity(1.*mm/microsecond);
+	drift_field->SetTransverseDiffusion(1.*mm/sqrt(cm));
+	drift_field->SetLongitudinalDiffusion(.5*mm/sqrt(cm));
+
+	G4Region* drift_region = new G4Region("DRIFT_REGION");
+	drift_region->SetUserInformation(drift_field);
+	drift_region->AddRootLogicalVolume(active_logic) 
 
         // EL gap field
 	UniformElectricDriftField* el_field = new UniformElectricDriftField();
-	//el_field->SetCathodePosition(00);
-	//el_field->SetAnodePosition(00);
-	el_field->SetDriftVelocity(5.*mm/microsecond);
+	G4double elGapDistance = (13. + 8.628) * mm; //Ring thickness + gap width
+	el_field->SetCathodePosition(-elGapDistance / 2.);
+	el_field->SetAnodePosition(elGapDistance / 2.);
+	el_field->SetDriftVelocity(75.*mm/microsecond);
 	el_field->SetTransverseDiffusion(1.*mm/sqrt(cm));
 	el_field->SetLongitudinalDiffusion(.5*mm/sqrt(cm));
 	el_field->SetLightYield(1000./cm);
