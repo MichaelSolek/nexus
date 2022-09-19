@@ -198,7 +198,7 @@ namespace nexus{
 
 	G4Region* drift_region = new G4Region("DRIFT_REGION");
 	drift_region->SetUserInformation(drift_field);
-	drift_region->AddRootLogicalVolume(active_logic) 
+	drift_region->AddRootLogicalVolume(drift_logic); 
 
         // EL gap field
 	UniformElectricDriftField* el_field = new UniformElectricDriftField();
