@@ -1,23 +1,27 @@
 # VERBOSITY
-/run/verbose 0
-/event/verbose 0
-/tracking/verbose 0
+/control/verbose 2
+/run/verbose 2
+/event/verbose 2
+/tracking/verbose 2
+#/run/verbose 0
+#/event/verbose 0
+#/tracking/verbose 0
 /process/em/verbose 0
 
 #GEOMETRY
 /Geometry/CRAB/gas_pressure 10. bar
-/Geometry/CRAB/chamber_diam  15. cm
-/Geometry/CRAB/chamber_length 25. cm
-/Geometry/CRAB/chamber_thickn 2. mm
-/Geometry/CRAB/SourcePosition -12 0 0
+#/Geometry/CRAB/chamber_diam  15. cm
+#/Geometry/CRAB/chamber_length 25. cm
+#/Geometry/CRAB/chamber_thickn 2. mm
+/Geometry/CRAB/SourcePosition 0 0 0
 
 
 # GENERATOR
-/Generator/SingleParticle/max_energy 31 keV
-/Generator/SingleParticle/min_energy 31 keV
+/Generator/SingleParticle/max_energy 1 MeV
+/Generator/SingleParticle/min_energy 1 MeV
 /Generator/SingleParticle/region DRIFT
 /Generator/SingleParticle/particle e-
-/Generator/SingleParticle/momentum 1 0 0
+/Generator/SingleParticle/momentum 0 0 -1
 
 #Actions
 #/Actions/DefaultEventAction/energy_threshold 1 keV
