@@ -99,7 +99,8 @@ namespace nexus{
     G4MultiUnion* getReflectivePanelArray();
     G4SubtractionSolid* getFieldCageStaves();
     G4MultiUnion* getBufferDriftCopperRingAssembly();
-    
+    G4MultiUnion* getChamber(G4double chamber_diam, G4double chamber_thickn, G4double chamber_length);
+
     void CRAB::Construct(){
 
 	//Define required unimplemented materials
@@ -120,7 +121,8 @@ namespace nexus{
 
 
         //Creating the Steel Cylinder that we use
-        G4Tubs* chamber_solid = new G4Tubs("CHAMBER", chamber_diam/2, (chamber_diam/2. + chamber_thickn),(chamber_length/2. + chamber_thickn), 0.,twopi);
+        G4MultiUnion* chamber_solid = getChamber(chamber_diam, chamber_thickn, chamber_length);
+	//G4Tubs* chamber_solid = new G4Tubs("CHAMBER", chamber_diam/2, (chamber_diam/2. + chamber_thickn),(chamber_length/2. + chamber_thickn), 0.,twopi);
         G4LogicalVolume* chamber_logic = new G4LogicalVolume(chamber_solid,materials::Steel(), "CHAMBER"); //
 
 	// Placing the gas in the chamber and define different field regions
@@ -323,6 +325,32 @@ namespace nexus{
                         "Unknown vertex generation region.");
         }
         return vtx_;
+    }
+
+    G4MultiUnion* getChamber(G4double chamber_diam, G4double chamber_thickn, G4double chamber_length) {
+        // Basic variable definitions
+	G4MultiUnion* chamber = new G4MultiUnion("CHAMBER");
+	G4Transform3D cylinderTransform, posWallTransform, negWallTransform; //Placements for cylinder and walls at +/- Z ends
+	G4Tubs* cylinder, *posWall, *negWall;
+
+	// Define the physical pieces
+	cylinder = new G4Tubs("CHAMBER", chamber_diam/2, (chamber_diam/2. + chamber_thickn),(chamber_length/2. + chamber_thickn), 0.,twopi);
+	posWall = new G4Tubs("CHAMBER_WALL_POS", 0, (chamber_diam/2. + chamber_thickn), chamber_thickn, 0., twopi);
+	negWall = new G4Tubs("CHAMBER_WALL_NEG", 0, (chamber_diam/2. + chamber_thickn), chamber_thickn, 0., twopi);
+	
+
+	//Define transformations to place solid pieces
+	G4double zpos = chamber_length/2. + chamber_thickn/2.;
+	cylinderTransform = G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,0));
+	posWallTransform = G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0, zpos));
+	negWallTransform = G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,-zpos));
+
+	// Add geometry to multiunion, finalize it, and return it
+	chamber->AddNode(cylinder, cylinderTransform);
+	chamber->AddNode(posWall, posWallTransform);
+	chamber->AddNode(negWall, negWallTransform);
+	chamber->Voxelize();
+	return chamber;
     }
 
     G4MultiUnion* getReflectivePanelArray() {
