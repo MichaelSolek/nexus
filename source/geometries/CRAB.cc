@@ -34,22 +34,22 @@ namespace nexus{
     REGISTER_CLASS(CRAB, GeometryBase)
 
 
-             CRAB::CRAB():
-             GeometryBase(),
-             msg_(nullptr),
-             Lab_size(3. *m),
-             chamber_diam   (19.24 * 2.54 * cm), //based on model dimensions, not drawings, may need revision. Seems odd to not be 19.25
-             chamber_length (50.125 * 2.54 * cm),//based on model dimensions, not drawings, may need revision
-             chamber_thickn (0.76 * 25.4 * mm),  //based on model dimensions, not drawings, may need revision. Seems odd to not be 0.75
-	     Active_diam    (482.7 * mm),	 //based on inner diameter of XON POLY OUTER WRAP.pdf drawing, may need revision
-	     Active_length  (1051. * mm),	 //based on length of staves in drawings, may need revision
-             SourceEn_offset (5.2 *cm),
-             SourceEn_diam   (1. * cm),
-             SourceEn_length (1 * cm),
-             SourceEn_thickn (2. * mm),
-             SourceEn_holedia (2. * mm),
-             gas_pressure_(10. * bar),
-             vtx_(0,0,0)
+            CRAB::CRAB():
+            GeometryBase(),
+            msg_(nullptr),
+            Lab_size(3. *m),
+            chamber_diam   (22 * 2.54 * cm), //based on model dimensions, not drawings, may need revision. Seems odd to not be 19.25
+            chamber_length (50.125 * 2.54 * cm),//based on model dimensions, not drawings, may need revision
+            chamber_thickn (0.76 * 25.4 * mm),  //based on model dimensions, not drawings, may need revision. Seems odd to not be 0.75
+	    	Active_diam    (482.7 * mm),	 //based on inner diameter of XON POLY OUTER WRAP.pdf drawing, may need revision
+	    	Active_length  (1051. * mm),	 //based on length of staves in drawings, may need revision
+            SourceEn_offset (5.2 *cm),
+            SourceEn_diam   (1. * cm),
+            SourceEn_length (1 * cm),
+            SourceEn_thickn (2. * mm),
+            SourceEn_holedia (2. * mm),
+            gas_pressure_(10. * bar),
+            vtx_(0,0,0)
 
 
     {
@@ -103,157 +103,157 @@ namespace nexus{
 
     void CRAB::Construct(){
 
-	//Define required unimplemented materials
-	G4Element* elCu = new G4Element("Copper", "Cu", 29, 63.546*g/mole);
-	G4Element* elAu = new G4Element("Gold", "Au", 79, 196.97*g/mole);
-	G4Material* Copper = new G4Material("Copper", 8.960*g/cm3, 1);
-	Copper->AddElement(elCu, 1);
-	// GOLD NEEDS TO BE REPLACED WITH TEFLON. FIND REPLACEMENT MATERIAL AND REMOVE THE FOLLOWING 2 LINES
-	G4Material* Gold = new G4Material("Gold", 19.3*g/cm3, 1);
-	Gold->AddElement(elAu, 1);
+		//Define required unimplemented materials
+		G4Element* elCu = new G4Element("Copper", "Cu", 29, 63.546*g/mole);
+		G4Element* elAu = new G4Element("Gold", "Au", 79, 196.97*g/mole);
+		G4Material* Copper = new G4Material("Copper", 8.960*g/cm3, 1);
+		Copper->AddElement(elCu, 1);
+		// GOLD NEEDS TO BE REPLACED WITH TEFLON. FIND REPLACEMENT MATERIAL AND REMOVE THE FOLLOWING 2 LINES
+		G4Material* Gold = new G4Material("Gold", 19.3*g/cm3, 1);
+		Gold->AddElement(elAu, 1);
 
-	//Constructing Lab Space
-    G4String lab_name="LAB";
-    G4Box * lab_solid_volume = new G4Box(lab_name,Lab_size/2,Lab_size/2,Lab_size/2);
-    G4LogicalVolume * lab_logic_volume= new G4LogicalVolume(lab_solid_volume,G4NistManager::Instance()->FindOrBuildMaterial("G4_AIR"),lab_name);
-    new G4PVPlacement(0, G4ThreeVector(),lab_logic_volume,lab_logic_volume->GetName(),0,false,0, true);
+		//Constructing Lab Space
+    	G4String lab_name="LAB";
+    	G4Box * lab_solid_volume = new G4Box(lab_name,Lab_size/2,Lab_size/2,Lab_size/2);
+    	G4LogicalVolume * lab_logic_volume= new G4LogicalVolume(lab_solid_volume,G4NistManager::Instance()->FindOrBuildMaterial("G4_AIR"),lab_name);
+    	new G4PVPlacement(0, G4ThreeVector(),lab_logic_volume,lab_logic_volume->GetName(),0,false,0, true);
 
-    //lab_logic_volume->SetVisAttributes(G4VisAttributes::Invisible);
+	    //lab_logic_volume->SetVisAttributes(G4VisAttributes::Invisible);
 
 
-    //Creating the Steel Cylinder that we use
-    G4MultiUnion* chamber_solid = getChamber(chamber_diam, chamber_thickn, chamber_length);
-	//G4Tubs* chamber_solid = new G4Tubs("CHAMBER", chamber_diam/2, (chamber_diam/2. + chamber_thickn),(chamber_length/2. + chamber_thickn), 0.,twopi);
-    G4LogicalVolume* chamber_logic = new G4LogicalVolume(chamber_solid,materials::Steel(), "CHAMBER");
-    new G4PVPlacement(0, G4ThreeVector(0., 0., 0.) ,chamber_logic, chamber_solid->GetName(), lab_logic_volume, false, 0,true);
+    	//Creating the Steel Cylinder that we use
+    	G4MultiUnion* chamber_solid = getChamber(chamber_diam, chamber_thickn, chamber_length);
+		//G4Tubs* chamber_solid = new G4Tubs("CHAMBER", chamber_diam/2, (chamber_diam/2. + chamber_thickn),(chamber_length/2. + chamber_thickn), 0.,twopi);
+    	G4LogicalVolume* chamber_logic = new G4LogicalVolume(chamber_solid,materials::Steel(), "CHAMBER");
+    	new G4PVPlacement(0, G4ThreeVector(0., 0., 0.) ,chamber_logic, chamber_solid->GetName(), lab_logic_volume, false, 0,true);
 
-	// Placing the gas in the chamber and define different field regions
-    G4Tubs* gas_solid = new G4Tubs("GAS", 0., chamber_diam/2., chamber_length/2., 0., twopi);
-	G4Material* gxe = materials::GXe(gas_pressure_);
-    gxe->SetMaterialPropertiesTable(opticalprops::GXe(gas_pressure_, 68));
-    G4LogicalVolume* gas_logic = new G4LogicalVolume(gas_solid, gxe, "GAS");
-    new G4PVPlacement(0, G4ThreeVector(0., 0., 0.), gas_logic, gas_solid->GetName(),chamber_logic, false, 0, true);
+		// Placing the gas in the chamber and define different field regions
+    	G4Tubs* gas_solid = new G4Tubs("GAS", 0., chamber_diam/2., chamber_length/2., 0., twopi);
+		G4Material* gxe = materials::GXe(gas_pressure_);
+    	gxe->SetMaterialPropertiesTable(opticalprops::GXe(gas_pressure_, 68));
+    	G4LogicalVolume* gas_logic = new G4LogicalVolume(gas_solid, gxe, "GAS");
+    	new G4PVPlacement(0, G4ThreeVector(0., 0., 0.), gas_logic, gas_solid->GetName(),chamber_logic, false, 0, true);
 
-	// Define different field regions
-	// Drift region
-    G4Tubs* drift_solid = new G4Tubs("DRIFT", 0., Active_diam/2., (807.157 * mm)/2., 0., twopi); //length is model distance from edge of cathode to edge of nearest EL ring
-	G4LogicalVolume* drift_logic = new G4LogicalVolume(drift_solid, gxe, "DRIFT");
-	UniformElectricDriftField* drift_field = new UniformElectricDriftField();
-	drift_field->SetCathodePosition(-807*mm/2.);
-	drift_field->SetAnodePosition(807*mm/2.);
-	drift_field->SetDriftVelocity(1.*mm/microsecond);
-	drift_field->SetTransverseDiffusion(1.*mm/sqrt(cm));
-	drift_field->SetLongitudinalDiffusion(.5*mm/sqrt(cm));
-	G4Region* drift_region = new G4Region("DRIFT_REGION");
-	drift_region->SetUserInformation(drift_field);
-	drift_region->AddRootLogicalVolume(drift_logic); 
-    new G4PVPlacement(0, G4ThreeVector(0., 0., -15.8094 * mm ), drift_logic, drift_solid->GetName(),gas_logic, false, 0, true); // offset calculated based off model
+		// Define different field regions
+		// Drift region
+    	G4Tubs* drift_solid = new G4Tubs("DRIFT", 0., Active_diam/2., (807.157 * mm)/2., 0., twopi); //length is model distance from edge of cathode to edge of nearest EL ring
+		G4LogicalVolume* drift_logic = new G4LogicalVolume(drift_solid, gxe, "DRIFT");
+		UniformElectricDriftField* drift_field = new UniformElectricDriftField();
+		drift_field->SetCathodePosition(-807*mm/2.);
+		drift_field->SetAnodePosition(807*mm/2.);
+		drift_field->SetDriftVelocity(1.*mm/microsecond);
+		drift_field->SetTransverseDiffusion(1.*mm/sqrt(cm));
+		drift_field->SetLongitudinalDiffusion(.5*mm/sqrt(cm));
+		G4Region* drift_region = new G4Region("DRIFT_REGION");
+		drift_region->SetUserInformation(drift_field);
+		drift_region->AddRootLogicalVolume(drift_logic); 
+    	new G4PVPlacement(0, G4ThreeVector(0., 0., -15.8094 * mm ), drift_logic, drift_solid->GetName(),gas_logic, false, 0, true); // offset calculated based off model
 
-	// EL region
-	G4Tubs* EL_solid = new G4Tubs("EL_GAP", 0., (382. * mm)/2., (6.628 * mm)/2., 0, twopi);
-	G4LogicalVolume* EL_logic = new G4LogicalVolume(EL_solid, gxe, "EL_GAP");
-	UniformElectricDriftField* el_field = new UniformElectricDriftField();
-	G4double elGapDistance = (13. + 8.628) * mm; //Ring thickness + gap width
-	el_field->SetCathodePosition(-elGapDistance / 2.);
-	el_field->SetAnodePosition(elGapDistance / 2.);
-	el_field->SetDriftVelocity(75.*mm/microsecond);
-	el_field->SetTransverseDiffusion(1.*mm/sqrt(cm));
-	el_field->SetLongitudinalDiffusion(.5*mm/sqrt(cm));
-	el_field->SetLightYield(1000./cm);
-	G4Region* el_region = new G4Region("EL_REGION");
-	el_region->SetUserInformation(el_field);
-	el_region->AddRootLogicalVolume(EL_logic);
-	new G4PVPlacement(0, G4ThreeVector(0., 0., -436.7015 * mm), EL_logic, EL_solid->GetName(), gas_logic, false, 0, true);
+		// EL region
+		G4Tubs* EL_solid = new G4Tubs("EL_GAP", 0., (382. * mm)/2., (6.628 * mm)/2., 0, twopi);
+		G4LogicalVolume* EL_logic = new G4LogicalVolume(EL_solid, gxe, "EL_GAP");
+		UniformElectricDriftField* el_field = new UniformElectricDriftField();
+		G4double elGapDistance = (13. + 8.628) * mm; //Ring thickness + gap width
+		el_field->SetCathodePosition(-elGapDistance / 2.);
+		el_field->SetAnodePosition(elGapDistance / 2.);
+		el_field->SetDriftVelocity(75.*mm/microsecond);
+		el_field->SetTransverseDiffusion(1.*mm/sqrt(cm));
+		el_field->SetLongitudinalDiffusion(.5*mm/sqrt(cm));
+		el_field->SetLightYield(1000./cm);
+		G4Region* el_region = new G4Region("EL_REGION");
+		el_region->SetUserInformation(el_field);
+		el_region->AddRootLogicalVolume(EL_logic);
+		new G4PVPlacement(0, G4ThreeVector(0., 0., -436.7015 * mm), EL_logic, EL_solid->GetName(), gas_logic, false, 0, true);
 
-	// Beyond EL region
-	G4Tubs* beyondEL_solid = new G4Tubs("BEYOND_EL", 0., Active_diam/2., (7.022 * 25.4 * mm)/2., 0., twopi);
-	G4LogicalVolume* beyondEL_logic = new G4LogicalVolume(beyondEL_solid, gxe, "BEYOND_EL");
-	new G4PVPlacement(0, G4ThreeVector(0., 0., -545.3015 * mm), beyondEL_logic, beyondEL_solid->GetName(), gas_logic, false, 0, true);
+		// Beyond EL region
+		G4Tubs* beyondEL_solid = new G4Tubs("BEYOND_EL", 0., Active_diam/2., (7.022 * 25.4 * mm)/2., 0., twopi);
+		G4LogicalVolume* beyondEL_logic = new G4LogicalVolume(beyondEL_solid, gxe, "BEYOND_EL");
+		new G4PVPlacement(0, G4ThreeVector(0., 0., -545.3015 * mm), beyondEL_logic, beyondEL_solid->GetName(), gas_logic, false, 0, true);
 
-    // Cathode ring
-	G4Tubs* cathode_solid = new G4Tubs("CATHODE", (343. * mm)/2., (373. * mm)/2., (10. * mm)/2., 0., twopi);
-	G4LogicalVolume* cathode_logic = new G4LogicalVolume(cathode_solid, materials::Steel(), "CATHODE");
-	new G4PVPlacement(0, G4ThreeVector(0., 0., 392.7695 * mm), cathode_logic, cathode_solid->GetName(), gas_logic, false, 0, true);
+	    // Cathode ring
+		G4Tubs* cathode_solid = new G4Tubs("CATHODE", (343. * mm)/2., (373. * mm)/2., (10. * mm)/2., 0., twopi);
+		G4LogicalVolume* cathode_logic = new G4LogicalVolume(cathode_solid, materials::Steel(), "CATHODE");
+		new G4PVPlacement(0, G4ThreeVector(0., 0., 392.7695 * mm), cathode_logic, cathode_solid->GetName(), gas_logic, false, 0, true);
 
-	// EL rings
-	G4Tubs* el_ring1_solid = new G4Tubs("EL_RING1", (382. * mm)/2., (437. * mm)/2., (13. * mm)/2., 0., twopi);
-	G4Tubs* el_ring2_solid = new G4Tubs("EL_RING2", (382. * mm)/2., (437. * mm)/2., (13. * mm)/2., 0., twopi);
-	G4UnionSolid* el_rings_solid = new G4UnionSolid("EL_RINGS", el_ring1_solid, el_ring2_solid, 0, G4ThreeVector(0., 0., 19.628 * mm)); // Make sure to place from ring 1, by wall
-	G4LogicalVolume* el_rings_logic = new G4LogicalVolume(el_rings_solid, materials::Steel(), "EL_RINGS");
-	new G4PVPlacement(0, G4ThreeVector(0., 0., -447.5155 * mm), el_rings_logic, el_rings_solid->GetName(), gas_logic, false, 0, true);
+		// EL rings
+		G4Tubs* el_ring1_solid = new G4Tubs("EL_RING1", (382. * mm)/2., (437. * mm)/2., (13. * mm)/2., 0., twopi);
+		G4Tubs* el_ring2_solid = new G4Tubs("EL_RING2", (382. * mm)/2., (437. * mm)/2., (13. * mm)/2., 0., twopi);
+		G4UnionSolid* el_rings_solid = new G4UnionSolid("EL_RINGS", el_ring1_solid, el_ring2_solid, 0, G4ThreeVector(0., 0., 19.628 * mm)); // Make sure to place from ring 1, by wall
+		G4LogicalVolume* el_rings_logic = new G4LogicalVolume(el_rings_solid, materials::Steel(), "EL_RINGS");
+		new G4PVPlacement(0, G4ThreeVector(0., 0., -447.5155 * mm), el_rings_logic, el_rings_solid->GetName(), gas_logic, false, 0, true);
 
-	// Reflective panel array
-	G4MultiUnion* reflectors_solid = getReflectivePanelArray();
-    G4LogicalVolume* reflectors_logic = new G4LogicalVolume(reflectors_solid, Gold, "REFLECTIVE_PANELS"); // Not the right material. Needs to be changed to teflon. See NEXT-100 for implementation.
-	new G4PVPlacement(0, G4ThreeVector(0., 0., -250.0455 * mm), reflectors_logic, reflectors_solid->GetName(), gas_logic, false, 0, true); // Note: calculating this from the cathode decreases z-component by ~0.1 mm
+		// Reflective panel array
+		G4MultiUnion* reflectors_solid = getReflectivePanelArray();
+    	G4LogicalVolume* reflectors_logic = new G4LogicalVolume(reflectors_solid, Gold, "REFLECTIVE_PANELS"); // Not the right material. Needs to be changed to teflon. See NEXT-100 for implementation.
+		new G4PVPlacement(0, G4ThreeVector(0., 0., -250.0455 * mm), reflectors_logic, reflectors_solid->GetName(), gas_logic, false, 0, true); // Note: calculating this from the cathode decreases z-component by ~0.1 mm
 
-	// Field cage staves
-	G4SubtractionSolid* fieldCageStaves_solid = getFieldCageStaves();
-	G4LogicalVolume* fieldCageStaves_logic = new G4LogicalVolume(fieldCageStaves_solid, materials::Steel(), "FIELD_CAGE_STAVES");
-	new G4PVPlacement(0, G4ThreeVector(0,0,121.2685*mm), fieldCageStaves_logic, fieldCageStaves_logic->GetName(), chamber_logic, false, 0, true);
+		// Field cage staves
+		G4SubtractionSolid* fieldCageStaves_solid = getFieldCageStaves();
+		G4LogicalVolume* fieldCageStaves_logic = new G4LogicalVolume(fieldCageStaves_solid, materials::Steel(), "FIELD_CAGE_STAVES");
+		new G4PVPlacement(0, G4ThreeVector(0,0,121.2685*mm), fieldCageStaves_logic, fieldCageStaves_logic->GetName(), chamber_logic, false, 0, true);
 	
-	// Buffer-Drift Copper Ring Assembly
-	G4MultiUnion* bufferDriftCopperRingAssembly_solid = getBufferDriftCopperRingAssembly();
-	G4LogicalVolume* bufferDriftCopperRingAssembly_logic = new G4LogicalVolume(bufferDriftCopperRingAssembly_solid, Copper, "BUFFER-DRIFT_COPPER_RING_ASSEMBLY"); 
-	new G4PVPlacement(0, G4ThreeVector(0,0,0), bufferDriftCopperRingAssembly_logic, bufferDriftCopperRingAssembly_logic->GetName(), chamber_logic, false, 0, true);
+		// Buffer-Drift Copper Ring Assembly
+		G4MultiUnion* bufferDriftCopperRingAssembly_solid = getBufferDriftCopperRingAssembly();
+		G4LogicalVolume* bufferDriftCopperRingAssembly_logic = new G4LogicalVolume(bufferDriftCopperRingAssembly_solid, Copper, "BUFFER-DRIFT_COPPER_RING_ASSEMBLY"); 
+		new G4PVPlacement(0, G4ThreeVector(0,0,0), bufferDriftCopperRingAssembly_logic, bufferDriftCopperRingAssembly_logic->GetName(), chamber_logic, false, 0, true);
 
-	// Poly insulation assembly
-	G4MultiUnion* polyInsulationAssembly_solid = new G4MultiUnion("POLY_INSULATION_ASSEMBLY");
-	G4Tubs* innerPolyInsulation = new G4Tubs("POLY_INSULATION_INNER", 470/2*mm, (470/2+6.35)*mm, 960/2*mm, twopi*(1-0.9933)/2, twopi*0.9933);
-	G4Tubs* outerPolyInsulation = new G4Tubs("POLY_INSULATION_OUTER", 482.7/2*mm, (482.6/2+6.35)*mm, 960/2*mm, twopi*(1-0.9933)/2, twopi*0.9933);
-	G4RotationMatrix* innerPolyRot = new G4RotationMatrix();
-	innerPolyRot->rotateZ(twopi/8);
-	G4RotationMatrix* outerPolyRot = new G4RotationMatrix();
-	outerPolyRot->rotateZ(twopi*5/8);
-	polyInsulationAssembly_solid->AddNode(innerPolyInsulation, G4Transform3D(*innerPolyRot, G4ThreeVector(0,0,0)));
-	polyInsulationAssembly_solid->AddNode(outerPolyInsulation, G4Transform3D(*outerPolyRot, G4ThreeVector(0,0,0)));
-	polyInsulationAssembly_solid->Voxelize();
-	G4LogicalVolume* polyInsulationAssembly_logic = new G4LogicalVolume(polyInsulationAssembly_solid, materials::HDPE(), "POLY_INSULATION_ASSEMBLY");
-	new G4PVPlacement(0, G4ThreeVector(0,0,166.7685*mm), polyInsulationAssembly_logic, polyInsulationAssembly_logic->GetName(), chamber_logic, false, 0, true);
+		// Poly insulation assembly
+		G4MultiUnion* polyInsulationAssembly_solid = new G4MultiUnion("POLY_INSULATION_ASSEMBLY");
+		G4Tubs* innerPolyInsulation = new G4Tubs("POLY_INSULATION_INNER", 470/2*mm, (470/2+6.35)*mm, 960/2*mm, twopi*(1-0.9933)/2, twopi*0.9933);
+		G4Tubs* outerPolyInsulation = new G4Tubs("POLY_INSULATION_OUTER", 482.7/2*mm, (482.6/2+6.35)*mm, 960/2*mm, twopi*(1-0.9933)/2, twopi*0.9933);
+		G4RotationMatrix* innerPolyRot = new G4RotationMatrix();
+		innerPolyRot->rotateZ(twopi/8);
+		G4RotationMatrix* outerPolyRot = new G4RotationMatrix();
+		outerPolyRot->rotateZ(twopi*5/8);
+		polyInsulationAssembly_solid->AddNode(innerPolyInsulation, G4Transform3D(*innerPolyRot, G4ThreeVector(0,0,0)));
+		polyInsulationAssembly_solid->AddNode(outerPolyInsulation, G4Transform3D(*outerPolyRot, G4ThreeVector(0,0,0)));
+		polyInsulationAssembly_solid->Voxelize();
+		G4LogicalVolume* polyInsulationAssembly_logic = new G4LogicalVolume(polyInsulationAssembly_solid, materials::HDPE(), "POLY_INSULATION_ASSEMBLY");
+		new G4PVPlacement(0, G4ThreeVector(0,0,166.7685*mm), polyInsulationAssembly_logic, polyInsulationAssembly_logic->GetName(), chamber_logic, false, 0, true);
 
-	// Radioactive Source Encloser
-    //Source
-    //G4Tubs* SourceHolChamber_solid =new G4Tubs("SourceHolChamber", SourceEn_holedia/2, (SourceEn_diam/2. + SourceEn_thickn),(SourceEn_length/2. + SourceEn_thickn),0,twopi);
-	//G4Tubs* SourceHolChamberBlock_solid =new G4Tubs("SourceHolChBlock",0,(SourceEn_holedia/2),( SourceEn_thickn/2), 0.,twopi);
-
-
-    //G4VSolid *SourceHolderGas_solid= new G4SubtractionSolid("SourceHolderGas",Source_Chm_solid,SourceHolder_solid);
+		// Radioactive Source Encloser
+    	//Source
+    	//G4Tubs* SourceHolChamber_solid =new G4Tubs("SourceHolChamber", SourceEn_holedia/2, (SourceEn_diam/2. + SourceEn_thickn),(SourceEn_length/2. + SourceEn_thickn),0,twopi);
+		//G4Tubs* SourceHolChamberBlock_solid =new G4Tubs("SourceHolChBlock",0,(SourceEn_holedia/2),( SourceEn_thickn/2), 0.,twopi);
 
 
-    //G4Material* gxe = materials::GXe(gas_pressure_);
-    //gxe->SetMaterialPropertiesTable(opticalprops::GXe(gas_pressure_, 68));
-
-	//G4LogicalVolume* SourceHolderGas_logic = new G4LogicalVolume(SourceHolderGas_solid, gxe, "SourceHolderGAS_logic");
-
-    //G4LogicalVolume* SourceHolChamber_logic = new G4LogicalVolume(SourceHolChamber_solid,materials::Steel(), "SourceHolChamber_logic");
-    //G4LogicalVolume* SourceHolChamberBlock_logic = new G4LogicalVolume(SourceHolChamberBlock_solid,materials::Steel(), "SourceHolChBlock_logic");
-
-    //Rotation Matrix
-    G4RotationMatrix* rm = new G4RotationMatrix();
-    rm->rotateY(90.*deg);
-    //rm->rotateX(-45.*deg);
-
-    //new G4PVPlacement(rm, G4ThreeVector(-SourceEn_offset,-SourceEn_offset,-SourceEn_offset), SourceHolChamber_logic, SourceHolChamber_solid->GetName(),gas_logic, false, 0, true);
-    //new G4PVPlacement(rm, G4ThreeVector(-SourceEn_offset-SourceEn_length/2,-SourceEn_offset-SourceEn_length/2,-SourceEn_offset), SourceHolChamberBlock_logic, SourceHolChamberBlock_solid->GetName(),gas_logic, false, 0, true);
-    //new G4PVPlacement(rm, G4ThreeVector(-SourceEn_offset,0,0), SourceHolChamber_logic, SourceHolChamber_solid->GetName(),gas_logic, false, 0, true);
-    //new G4PVPlacement(rm, G4ThreeVector(-SourceEn_offset-SourceEn_length/2,0,0), SourceHolChamberBlock_logic, SourceHolChamberBlock_solid->GetName(),gas_logic, false, 0, true);
+    	//G4VSolid *SourceHolderGas_solid= new G4SubtractionSolid("SourceHolderGas",Source_Chm_solid,SourceHolder_solid);
 
 
-    // Define this volume as an ionization sensitive detector
-    IonizationSD* sensdet_fc = new IonizationSD("/CRAB/DRIFT");
-	IonizationSD* sensdet_el = new IonizationSD("/CRAB/EL_GAP");
-	IonizationSD* sensdet_bel = new IonizationSD("/CRAB/BEYOND_EL");
-    //IonizationSD* sensdet = new IonizationSD("/CRAB/GAS");
-    drift_logic->SetSensitiveDetector(sensdet_fc);
-	EL_logic->SetSensitiveDetector(sensdet_el);
-	beyondEL_logic->SetSensitiveDetector(sensdet_bel);
-    G4SDManager::GetSDMpointer()->AddNewDetector(sensdet_fc);
-	G4SDManager::GetSDMpointer()->AddNewDetector(sensdet_el);
-	G4SDManager::GetSDMpointer()->AddNewDetector(sensdet_bel);
+    	//G4Material* gxe = materials::GXe(gas_pressure_);
+    	//gxe->SetMaterialPropertiesTable(opticalprops::GXe(gas_pressure_, 68));
 
-    AssignVisuals();
-    //this->SetLogicalVolume(lab_logic_volume);
-    this->SetLogicalVolume(chamber_logic);
+		//G4LogicalVolume* SourceHolderGas_logic = new G4LogicalVolume(SourceHolderGas_solid, gxe, "SourceHolderGAS_logic");
+
+    	//G4LogicalVolume* SourceHolChamber_logic = new G4LogicalVolume(SourceHolChamber_solid,materials::Steel(), "SourceHolChamber_logic");
+    	//G4LogicalVolume* SourceHolChamberBlock_logic = new G4LogicalVolume(SourceHolChamberBlock_solid,materials::Steel(), "SourceHolChBlock_logic");
+
+    	//Rotation Matrix
+    	G4RotationMatrix* rm = new G4RotationMatrix();
+    	rm->rotateY(90.*deg);
+    	//rm->rotateX(-45.*deg);
+
+    	//new G4PVPlacement(rm, G4ThreeVector(-SourceEn_offset,-SourceEn_offset,-SourceEn_offset), SourceHolChamber_logic, SourceHolChamber_solid->GetName(),gas_logic, false, 0, true);
+    	//new G4PVPlacement(rm, G4ThreeVector(-SourceEn_offset-SourceEn_length/2,-SourceEn_offset-SourceEn_length/2,-SourceEn_offset), SourceHolChamberBlock_logic, SourceHolChamberBlock_solid->GetName(),gas_logic, false, 0, true);
+    	//new G4PVPlacement(rm, G4ThreeVector(-SourceEn_offset,0,0), SourceHolChamber_logic, SourceHolChamber_solid->GetName(),gas_logic, false, 0, true);
+    	//new G4PVPlacement(rm, G4ThreeVector(-SourceEn_offset-SourceEn_length/2,0,0), SourceHolChamberBlock_logic, SourceHolChamberBlock_solid->GetName(),gas_logic, false, 0, true);
+
+
+    	// Define this volume as an ionization sensitive detector
+    	IonizationSD* sensdet_fc = new IonizationSD("/CRAB/DRIFT");
+		IonizationSD* sensdet_el = new IonizationSD("/CRAB/EL_GAP");
+		IonizationSD* sensdet_bel = new IonizationSD("/CRAB/BEYOND_EL");
+    	//IonizationSD* sensdet = new IonizationSD("/CRAB/GAS");
+    	drift_logic->SetSensitiveDetector(sensdet_fc);
+		EL_logic->SetSensitiveDetector(sensdet_el);
+		beyondEL_logic->SetSensitiveDetector(sensdet_bel);
+    	G4SDManager::GetSDMpointer()->AddNewDetector(sensdet_fc);
+		G4SDManager::GetSDMpointer()->AddNewDetector(sensdet_el);
+		G4SDManager::GetSDMpointer()->AddNewDetector(sensdet_bel);
+
+    	AssignVisuals();
+    	//this->SetLogicalVolume(lab_logic_volume);
+    	this->SetLogicalVolume(chamber_logic);
 
     }
 
@@ -332,20 +332,19 @@ namespace nexus{
 
 		// Define the physical pieces
 		cylinder = new G4Tubs("CHAMBER", chamber_diam/2, (chamber_diam/2. + chamber_thickn),(chamber_length/2. + chamber_thickn), 0.,twopi);
-		posWall = new G4Tubs("CHAMBER_WALL_POS", 0, (chamber_diam/2. + chamber_thickn), chamber_thickn, 0., twopi);
-		negWall = new G4Tubs("CHAMBER_WALL_NEG", 0, (chamber_diam/2. + chamber_thickn), chamber_thickn, 0., twopi);
-	
+		posWall = new G4Tubs("CHAMBER_WALL_POS", 0, (chamber_diam/2. + chamber_thickn), chamber_thickn/2., 0., twopi);
+		negWall = new G4Tubs("CHAMBER_WALL_NEG", 0, (chamber_diam/2. + chamber_thickn), chamber_thickn/2., 0., twopi);
 
 		//Define transformations to place solid pieces
-		G4double zpos = chamber_length/2. + chamber_thickn/2.;
+		G4double zpos = chamber_length/2. + chamber_thickn;
 		cylinderTransform = G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,0));
 		posWallTransform = G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0, zpos));
 		negWallTransform = G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,-zpos));
 
 		// Add geometry to multiunion, finalize it, and return it
 		chamber->AddNode(cylinder, cylinderTransform);
-		chamber->AddNode(posWall, posWallTransform);
-		chamber->AddNode(negWall, negWallTransform);
+		//chamber->AddNode(posWall, posWallTransform);
+		//chamber->AddNode(negWall, negWallTransform);
 		chamber->Voxelize();
 		return chamber;
     }
