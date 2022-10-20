@@ -326,7 +326,7 @@ namespace nexus{
 
     G4MultiUnion* getChamber(G4double chamber_diam, G4double chamber_thickn, G4double chamber_length) {
         // Basic variable definitions
-		4MultiUnion* chamber = new G4MultiUnion("CHAMBER");
+		G4MultiUnion* chamber = new G4MultiUnion("CHAMBER");
 		G4Transform3D cylinderTransform, posWallTransform, negWallTransform; //Placements for cylinder and walls at +/- Z ends
 		G4Tubs* cylinder, *posWall, *negWall;
 
