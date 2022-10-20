@@ -326,179 +326,179 @@ namespace nexus{
 
     G4MultiUnion* getChamber(G4double chamber_diam, G4double chamber_thickn, G4double chamber_length) {
         // Basic variable definitions
-	G4MultiUnion* chamber = new G4MultiUnion("CHAMBER");
-	G4Transform3D cylinderTransform, posWallTransform, negWallTransform; //Placements for cylinder and walls at +/- Z ends
-	G4Tubs* cylinder, *posWall, *negWall;
+		4MultiUnion* chamber = new G4MultiUnion("CHAMBER");
+		G4Transform3D cylinderTransform, posWallTransform, negWallTransform; //Placements for cylinder and walls at +/- Z ends
+		G4Tubs* cylinder, *posWall, *negWall;
 
-	// Define the physical pieces
-	cylinder = new G4Tubs("CHAMBER", chamber_diam/2, (chamber_diam/2. + chamber_thickn),(chamber_length/2. + chamber_thickn), 0.,twopi);
-	posWall = new G4Tubs("CHAMBER_WALL_POS", 0, (chamber_diam/2. + chamber_thickn), chamber_thickn, 0., twopi);
-	negWall = new G4Tubs("CHAMBER_WALL_NEG", 0, (chamber_diam/2. + chamber_thickn), chamber_thickn, 0., twopi);
+		// Define the physical pieces
+		cylinder = new G4Tubs("CHAMBER", chamber_diam/2, (chamber_diam/2. + chamber_thickn),(chamber_length/2. + chamber_thickn), 0.,twopi);
+		posWall = new G4Tubs("CHAMBER_WALL_POS", 0, (chamber_diam/2. + chamber_thickn), chamber_thickn, 0., twopi);
+		negWall = new G4Tubs("CHAMBER_WALL_NEG", 0, (chamber_diam/2. + chamber_thickn), chamber_thickn, 0., twopi);
 	
 
-	//Define transformations to place solid pieces
-	G4double zpos = chamber_length/2. + chamber_thickn/2.;
-	cylinderTransform = G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,0));
-	posWallTransform = G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0, zpos));
-	negWallTransform = G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,-zpos));
+		//Define transformations to place solid pieces
+		G4double zpos = chamber_length/2. + chamber_thickn/2.;
+		cylinderTransform = G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,0));
+		posWallTransform = G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0, zpos));
+		negWallTransform = G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,-zpos));
 
-	// Add geometry to multiunion, finalize it, and return it
-	chamber->AddNode(cylinder, cylinderTransform);
-	chamber->AddNode(posWall, posWallTransform);
-	chamber->AddNode(negWall, negWallTransform);
-	chamber->Voxelize();
-	return chamber;
+		// Add geometry to multiunion, finalize it, and return it
+		chamber->AddNode(cylinder, cylinderTransform);
+		chamber->AddNode(posWall, posWallTransform);
+		chamber->AddNode(negWall, negWallTransform);
+		chamber->Voxelize();
+		return chamber;
     }
 
     G4MultiUnion* getReflectivePanelArray() {
         G4MultiUnion* panel_array = new G4MultiUnion("REFLECTIVE_PANELS");
-	G4RotationMatrix* rm[12];
-	G4Transform3D tr[12][4];
-	G4double initialRotation = 19.60 * deg;
+		G4RotationMatrix* rm[12];
+		G4Transform3D tr[12][4];
+		G4double initialRotation = 19.60 * deg;
         G4double radius = (370.592/2. + (5.004+6.756)/2.)*mm;//~191.176mm
         
-	std::vector<G4TwoVector> polygon = {G4TwoVector(9.85*mm,11.76*mm/2.), G4TwoVector(4*mm,-0.876*mm), G4TwoVector(101.*mm/2.,-0.876*mm),
+		std::vector<G4TwoVector> polygon = {G4TwoVector(9.85*mm,11.76*mm/2.), G4TwoVector(4*mm,-0.876*mm), G4TwoVector(101.*mm/2.,-0.876*mm),
 		                            G4TwoVector(98.318*mm/2.,-11.76*mm/2.), G4TwoVector(-98.317*mm/2.,-11.76*mm/2.), G4TwoVector(-101.*mm/2.,-0.876*mm),
 		                            G4TwoVector(-4*mm,-0.876*mm), G4TwoVector(-9.85*mm,11.76*mm/2.)};
         for(int i=0; i<12; i++){
             rm[i] = new G4RotationMatrix();
-	    G4double rotation = initialRotation + i*30.*deg;
-	    rm[i]->rotateZ(rotation);
-	    for(int j=0; j<4; j++){
-		G4double zpos, halfz;
-		zpos = j*(252.+2.)*mm;
-		halfz = 252.*mm/2.;
-		if (j==3){
-		    halfz = 245.*mm/2.; // last panels beyond cathode are a bit shorter
-		    zpos += (17.814-2.-(252.-245.)/2.)*mm; // Adjust for gap across cathode and change in panel length
+	    	G4double rotation = initialRotation + i*30.*deg;
+	    	rm[i]->rotateZ(rotation);
+	    	for(int j=0; j<4; j++){
+				G4double zpos, halfz;
+				zpos = j*(252.+2.)*mm;
+				halfz = 252.*mm/2.;
+				if (j==3){
+				    halfz = 245.*mm/2.; // last panels beyond cathode are a bit shorter
+				    zpos += (17.814-2.-(252.-245.)/2.)*mm; // Adjust for gap across cathode and change in panel length
+				}
+	        	G4ThreeVector position = G4ThreeVector((-radius)*cos(90.*deg-rotation), radius*sin(90.*deg-rotation), zpos);
+	        	tr[i][j] = G4Transform3D(*rm[i], position);
+	        	G4ExtrudedSolid* panel = new G4ExtrudedSolid("PANEL_" + std::to_string(j+1) + "-" + std::to_string(i+1), polygon, halfz, G4TwoVector(0,0), 1, G4TwoVector(0,0), 1);
+	        	panel_array->AddNode(panel, tr[i][j]);
+	    	}
 		}
-	        G4ThreeVector position = G4ThreeVector((-radius)*cos(90.*deg-rotation), radius*sin(90.*deg-rotation), zpos);
-	        tr[i][j] = G4Transform3D(*rm[i], position);
-	        G4ExtrudedSolid* panel = new G4ExtrudedSolid("PANEL_" + std::to_string(j+1) + "-" + std::to_string(i+1), polygon, halfz, G4TwoVector(0,0), 1, G4TwoVector(0,0), 1);
-	        panel_array->AddNode(panel, tr[i][j]);
-	    }
-	}
 
-	panel_array->Voxelize();
-	return panel_array;
-    }
+		panel_array->Voxelize();
+		return panel_array;
+    	}
 
     G4SubtractionSolid* getFieldCageStaves(){
-	// Define shapes used  to construct the field cage staves
-	G4MultiUnion* blankFieldCageStaves = new G4MultiUnion("BLANK_FIELD_CAGE_STAVES");
-	G4MultiUnion* subRings = new G4MultiUnion("SUBTRACTION_RINGS");
-	G4SubtractionSolid* baseFieldCageStaves;
-	G4SubtractionSolid* fieldCageStaves;
+		// Define shapes used  to construct the field cage staves
+		G4MultiUnion* blankFieldCageStaves = new G4MultiUnion("BLANK_FIELD_CAGE_STAVES");
+		G4MultiUnion* subRings = new G4MultiUnion("SUBTRACTION_RINGS");
+		G4SubtractionSolid* baseFieldCageStaves;
+		G4SubtractionSolid* fieldCageStaves;
 
-	G4RotationMatrix* rm[12];
-	G4Transform3D tr[12];
-	std::vector<G4TwoVector> polygon = {G4TwoVector(30*mm,50*mm), G4TwoVector(30*mm, 0), G4TwoVector(4.54585*mm, 0), G4TwoVector(10.5*mm, 7*mm),
+		G4RotationMatrix* rm[12];
+		G4Transform3D tr[12];
+		std::vector<G4TwoVector> polygon = {G4TwoVector(30*mm,50*mm), G4TwoVector(30*mm, 0), G4TwoVector(4.54585*mm, 0), G4TwoVector(10.5*mm, 7*mm),
 					    G4TwoVector(-10.5*mm, 7*mm), G4TwoVector(-4.54585*mm, 0), G4TwoVector(-30*mm, 0), G4TwoVector(-30*mm, 50*mm)};
-	G4double outerEdgeRadius = 235 * mm;
-	G4double grooveTopRadius = 202.8 * mm;
-	G4double staveWidth = 60 * mm;
-	G4double staveHeight = 44.7 * mm;
-	G4double staveLength = 1051 * mm;
-	G4double initialRotation = 19.60 * deg;
-	G4double placementRadius = (185.296 + 5.004) * mm;
-	//placementRadius *= 1.5;
+		G4double outerEdgeRadius = 235 * mm;
+		G4double grooveTopRadius = 202.8 * mm;
+		G4double staveWidth = 60 * mm;
+		G4double staveHeight = 44.7 * mm;
+		G4double staveLength = 1051 * mm;
+		G4double initialRotation = 19.60 * deg;
+		G4double placementRadius = (185.296 + 5.004) * mm;
+		//placementRadius *= 1.5;
 
-	// Build the blank staves with no notches and place them. No further nodes required, so voxelize it.
-	for(int i=0; i<12; i++){
-	    rm[i] = new G4RotationMatrix();
-	    // These must be placed in specific positions as certain staves require certain unique modifications, unlike the reflective panels.
-	    G4double rotation = initialRotation + (i-4)*30*deg;
-	    rm[i]->rotateZ(rotation);
-	    G4ThreeVector position = G4ThreeVector(0,0,0);//(-placementRadius*cos(90.*deg-rotation), placementRadius*sin(90.*deg-rotation), 0);
-	    tr[i] = G4Transform3D(*rm[i], position);
-	    G4ExtrudedSolid* staveOutline = new G4ExtrudedSolid("STAVE_OUTLINE_" + std::to_string(i+1), polygon, staveLength/2, G4TwoVector(0,0), 1, G4TwoVector(0,0), 1);
-	    G4Tubs* staveBase = new G4Tubs("STAVE_BASE_" + std::to_string(i+1), outerEdgeRadius-(50*mm), outerEdgeRadius, (staveLength/2) + 10*mm, 0, twopi); //twopi*23/24, twopi/12);
-	    //This intesection solid needs a transformation to move the outline so it can properly intersect
-	    G4ThreeVector intersectionPos = G4ThreeVector(outerEdgeRadius-staveHeight,0,0);
-	    G4RotationMatrix* intersectionRot = new G4RotationMatrix();
-	    intersectionRot->rotateZ(90*deg);
-	    G4IntersectionSolid* ungroovedStave = new G4IntersectionSolid("STAVE_UNGROOVED_" + std::to_string(i+1), staveBase, staveOutline, intersectionRot, intersectionPos);
-	    blankFieldCageStaves->AddNode(ungroovedStave, tr[i]);
-	    //fieldCageStaves->AddNode(staveBase, G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,0)));
-	    //fieldCageStaves->AddNode(staveOutline, tr[i]);
-	}
-	blankFieldCageStaves->Voxelize();
+		// Build the blank staves with no notches and place them. No further nodes required, so voxelize it.
+		for(int i=0; i<12; i++){
+	    	rm[i] = new G4RotationMatrix();
+	    	// These must be placed in specific positions as certain staves require certain unique modifications, unlike the reflective panels.
+	    	G4double rotation = initialRotation + (i-4)*30*deg;
+	    	rm[i]->rotateZ(rotation);
+	    	G4ThreeVector position = G4ThreeVector(0,0,0);//(-placementRadius*cos(90.*deg-rotation), placementRadius*sin(90.*deg-rotation), 0);
+	    	tr[i] = G4Transform3D(*rm[i], position);
+	    	G4ExtrudedSolid* staveOutline = new G4ExtrudedSolid("STAVE_OUTLINE_" + std::to_string(i+1), polygon, staveLength/2, G4TwoVector(0,0), 1, G4TwoVector(0,0), 1);
+	    	G4Tubs* staveBase = new G4Tubs("STAVE_BASE_" + std::to_string(i+1), outerEdgeRadius-(50*mm), outerEdgeRadius, (staveLength/2) + 10*mm, 0, twopi); //twopi*23/24, twopi/12);
+	    	//This intesection solid needs a transformation to move the outline so it can properly intersect
+	    	G4ThreeVector intersectionPos = G4ThreeVector(outerEdgeRadius-staveHeight,0,0);
+	    	G4RotationMatrix* intersectionRot = new G4RotationMatrix();
+	    	intersectionRot->rotateZ(90*deg);
+	    	G4IntersectionSolid* ungroovedStave = new G4IntersectionSolid("STAVE_UNGROOVED_" + std::to_string(i+1), staveBase, staveOutline, intersectionRot, intersectionPos);
+	    	blankFieldCageStaves->AddNode(ungroovedStave, tr[i]);
+	    	//fieldCageStaves->AddNode(staveBase, G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,0)));
+	    	//fieldCageStaves->AddNode(staveOutline, tr[i]);
+		}
+		blankFieldCageStaves->Voxelize();
 	
-	// Make a set of rings to  use in a subtraction to cut all the notches that appear in all staves
-	// 4 widely spaced notches towards right end of design drawing
-	for(int i=0; i<4; i++){
-	    G4double zpos = (1051*mm)/2. - 69*mm - i*48*mm;
-	    G4Tubs* ring = new G4Tubs("SUBTRACTION_RING_" + std::to_string(i), grooveTopRadius, outerEdgeRadius + 5*mm, 10.5*mm/2., 0, twopi);
-	    //G4RotationMatrix* testRot = new G4RotationMatrix();
-	    //G4Transform3D testTrans = G4Transform3D(testRot, G4ThreeVector(0,0,0));
-	    subRings->AddNode(ring, G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,zpos))); 
-	}
-	// 31 tightly spaced notches finishing near the left end of the design drawing
-	for(int i=0; i<31; i++){
-	    G4double zpos = (1051*mm)/2. - 285*mm - i*24*mm;
-	    G4Tubs* ring = new G4Tubs("SUBTRACTION_RING_" + std::to_string(i), grooveTopRadius, outerEdgeRadius + 5*mm, 10.5*mm/2., 0, twopi);
-	    subRings->AddNode(ring, G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,zpos)));
-	}
-	subRings->Voxelize();
+		// Make a set of rings to  use in a subtraction to cut all the notches that appear in all staves
+		// 4 widely spaced notches towards right end of design drawing
+		for(int i=0; i<4; i++){
+		    G4double zpos = (1051*mm)/2. - 69*mm - i*48*mm;
+		    G4Tubs* ring = new G4Tubs("SUBTRACTION_RING_" + std::to_string(i), grooveTopRadius, outerEdgeRadius + 5*mm, 10.5*mm/2., 0, twopi);
+		    //G4RotationMatrix* testRot = new G4RotationMatrix();
+		    //G4Transform3D testTrans = G4Transform3D(testRot, G4ThreeVector(0,0,0));
+		    subRings->AddNode(ring, G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,zpos))); 
+		}
+		// 31 tightly spaced notches finishing near the left end of the design drawing
+		for(int i=0; i<31; i++){
+		    G4double zpos = (1051*mm)/2. - 285*mm - i*24*mm;
+		    G4Tubs* ring = new G4Tubs("SUBTRACTION_RING_" + std::to_string(i), grooveTopRadius, outerEdgeRadius + 5*mm, 10.5*mm/2., 0, twopi);
+		    subRings->AddNode(ring, G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,zpos)));
+		}
+		subRings->Voxelize();
 	
-	// Make the subtraction and return it
-	baseFieldCageStaves = new G4SubtractionSolid("FIELD_CAGE_STAVE_BASES", blankFieldCageStaves, subRings);
+		// Make the subtraction and return it
+		baseFieldCageStaves = new G4SubtractionSolid("FIELD_CAGE_STAVE_BASES", blankFieldCageStaves, subRings);
 	
-	// Add the stave-specific subtractions
-	G4Tubs* notch82_5 = new G4Tubs("STAVE_NOTCH_82_5_MM", grooveTopRadius, outerEdgeRadius + 5*mm, 82.5*mm/2., twopi*39/40, twopi/20);
-	G4Tubs* notch58_5 = new G4Tubs("STAVE_NOTCH_58_5_MM", grooveTopRadius, outerEdgeRadius + 5*mm, 58.5*mm/2., twopi*39/40, twopi/20);
-        G4Tubs* notch51 =   new G4Tubs("STAVE_NOTCH_51_MM",   grooveTopRadius, outerEdgeRadius + 5*mm, 51.0*mm/2., twopi*39/40, twopi/20);
-        G4Tubs* notch106_5 =new G4Tubs("STAVE_NOTCH_106_5_MM",grooveTopRadius, outerEdgeRadius + 5*mm, 106.5*mm/2., twopi*39/40, twopi/20);
-        G4MultiUnion* uniqueNotches = new G4MultiUnion("PER_STAVE_SUBTRACTIONS");
-	// Placement is not predictably even; have to place each manually
-        uniqueNotches->AddNode(notch58_5, G4Transform3D(*rm[0], G4ThreeVector(0,0,staveLength/2.-(663.8+58.5/2)*mm)));
-        uniqueNotches->AddNode(notch82_5, G4Transform3D(*rm[1], G4ThreeVector(0,0,staveLength/2.-(591.8+82.5/2)*mm)));
-        uniqueNotches->AddNode(notch82_5, G4Transform3D(*rm[2], G4ThreeVector(0,0,staveLength/2.-(519.8+82.5/2)*mm)));
-        uniqueNotches->AddNode(notch82_5, G4Transform3D(*rm[3], G4ThreeVector(0,0,staveLength/2.-(447.8+82.5/2)*mm)));
-        uniqueNotches->AddNode(notch82_5, G4Transform3D(*rm[4], G4ThreeVector(0,0,staveLength/2.-(375.8+82.5/2)*mm)));
-        uniqueNotches->AddNode(notch58_5, G4Transform3D(*rm[5], G4ThreeVector(0,0,staveLength/2.-(327.8+58.5/2)*mm)));
-        uniqueNotches->AddNode(notch51  , G4Transform3D(*rm[6], G4ThreeVector(0,0,staveLength/2.-(263.3+51.0/2)*mm)));
-        uniqueNotches->AddNode(notch106_5,G4Transform3D(*rm[8], G4ThreeVector(0,0,staveLength/2.-(903.8+106.5/2)*mm)));
-        uniqueNotches->AddNode(notch58_5, G4Transform3D(*rm[9], G4ThreeVector(0,0,staveLength/2.-(855.8+58.5/2)*mm)));
-        uniqueNotches->AddNode(notch82_5, G4Transform3D(*rm[10], G4ThreeVector(0,0,staveLength/2.-(738.8+82.5/2)*mm)));
-        uniqueNotches->AddNode(notch82_5, G4Transform3D(*rm[11], G4ThreeVector(0,0,(staveLength/2.-711.8+82.5/2)*mm)));
-	uniqueNotches->Voxelize();
+		// Add the stave-specific subtractions
+		G4Tubs* notch82_5 = new G4Tubs("STAVE_NOTCH_82_5_MM", grooveTopRadius, outerEdgeRadius + 5*mm, 82.5*mm/2., twopi*39/40, twopi/20);
+		G4Tubs* notch58_5 = new G4Tubs("STAVE_NOTCH_58_5_MM", grooveTopRadius, outerEdgeRadius + 5*mm, 58.5*mm/2., twopi*39/40, twopi/20);
+    	G4Tubs* notch51 =   new G4Tubs("STAVE_NOTCH_51_MM",   grooveTopRadius, outerEdgeRadius + 5*mm, 51.0*mm/2., twopi*39/40, twopi/20);
+    	G4Tubs* notch106_5 =new G4Tubs("STAVE_NOTCH_106_5_MM",grooveTopRadius, outerEdgeRadius + 5*mm, 106.5*mm/2., twopi*39/40, twopi/20);
+    	G4MultiUnion* uniqueNotches = new G4MultiUnion("PER_STAVE_SUBTRACTIONS");
+		// Placement is not predictably even; have to place each manually
+    	uniqueNotches->AddNode(notch58_5, G4Transform3D(*rm[0], G4ThreeVector(0,0,staveLength/2.-(663.8+58.5/2)*mm)));
+    	uniqueNotches->AddNode(notch82_5, G4Transform3D(*rm[1], G4ThreeVector(0,0,staveLength/2.-(591.8+82.5/2)*mm)));
+    	uniqueNotches->AddNode(notch82_5, G4Transform3D(*rm[2], G4ThreeVector(0,0,staveLength/2.-(519.8+82.5/2)*mm)));
+    	uniqueNotches->AddNode(notch82_5, G4Transform3D(*rm[3], G4ThreeVector(0,0,staveLength/2.-(447.8+82.5/2)*mm)));
+    	uniqueNotches->AddNode(notch82_5, G4Transform3D(*rm[4], G4ThreeVector(0,0,staveLength/2.-(375.8+82.5/2)*mm)));
+    	uniqueNotches->AddNode(notch58_5, G4Transform3D(*rm[5], G4ThreeVector(0,0,staveLength/2.-(327.8+58.5/2)*mm)));
+    	uniqueNotches->AddNode(notch51  , G4Transform3D(*rm[6], G4ThreeVector(0,0,staveLength/2.-(263.3+51.0/2)*mm)));
+    	uniqueNotches->AddNode(notch106_5,G4Transform3D(*rm[8], G4ThreeVector(0,0,staveLength/2.-(903.8+106.5/2)*mm)));
+    	uniqueNotches->AddNode(notch58_5, G4Transform3D(*rm[9], G4ThreeVector(0,0,staveLength/2.-(855.8+58.5/2)*mm)));
+    	uniqueNotches->AddNode(notch82_5, G4Transform3D(*rm[10], G4ThreeVector(0,0,staveLength/2.-(738.8+82.5/2)*mm)));
+    	uniqueNotches->AddNode(notch82_5, G4Transform3D(*rm[11], G4ThreeVector(0,0,(staveLength/2.-711.8+82.5/2)*mm)));
+		uniqueNotches->Voxelize();
 
-	fieldCageStaves = new G4SubtractionSolid("FIELD_CAGE_STAVES", baseFieldCageStaves, uniqueNotches);
+		fieldCageStaves = new G4SubtractionSolid("FIELD_CAGE_STAVES", baseFieldCageStaves, uniqueNotches);
 
 
-	return fieldCageStaves;
+		return fieldCageStaves;
     }
 
     // The origin of the resulting piece should be the origin of the overall space. Consider rewriting a bit to place origin relative to some
     // piece here like the first ring or something. Sort of odd to be the only piece placed at the origin, and those sorts of inconsistencies
     // make it hard to read and maintain the code.
     G4MultiUnion* getBufferDriftCopperRingAssembly(){
-	// Define key dimensions and geometric components
-	G4double innerRadius = 203 * mm;
-	G4double outerRadius = 215 * mm;
-	G4double thickness = 10 * mm;
-	G4double zpos;
-	G4Transform3D tr[35];
-	G4MultiUnion* assembly = new G4MultiUnion("BUFFER-DRIFT_COPPER_RING_ASSEMBLY");
+		// Define key dimensions and geometric components
+		G4double innerRadius = 203 * mm;
+		G4double outerRadius = 215 * mm;
+		G4double thickness = 10 * mm;
+		G4double zpos;
+		G4Transform3D tr[35];
+		G4MultiUnion* assembly = new G4MultiUnion("BUFFER-DRIFT_COPPER_RING_ASSEMBLY");
 
-	// Place the tightly packed rings towards th/e EL end
-	zpos = (232.356 + 46 - 50.125*25.4/2) * mm; // distance wall to staves + distance stave start to first ring - origin to wall
-	for(int i=0; i<31; i++){
-	    zpos = (232.356 + 46 - 50.125*25.4/2) * mm + i*24*mm; // distance wall to staves + distance stave start to first ring - origin to wall, plus ring-specific offset
-	    G4Tubs* copperRing = new G4Tubs("COPPER_RING_" + std::to_string(i+1), innerRadius, outerRadius, thickness/2., 0, twopi);
-	    tr[i] = G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,zpos));
-	    assembly->AddNode(*copperRing, tr[i]);	    
-	}
+		// Place the tightly packed rings towards th/e EL end
+		zpos = (232.356 + 46 - 50.125*25.4/2) * mm; // distance wall to staves + distance stave start to first ring - origin to wall
+		for(int i=0; i<31; i++){
+		    zpos = (232.356 + 46 - 50.125*25.4/2) * mm + i*24*mm; // distance wall to staves + distance stave start to first ring - origin to wall, plus ring-specific offset
+		    G4Tubs* copperRing = new G4Tubs("COPPER_RING_" + std::to_string(i+1), innerRadius, outerRadius, thickness/2., 0, twopi);
+		    tr[i] = G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,zpos));
+		    assembly->AddNode(*copperRing, tr[i]);	    
+		}
 
-	// Place the widely spaced rings
-	for(int i=31; i < 35; i++){
-	    zpos = (232.356 + 838 - 50.125*25.4/2) * mm + (i-31)*48*mm; // distance wall to staves + distance stave start to first wide-spaced ring - origin to wall
-	    G4Tubs* copperRing = new G4Tubs("COPPER_RING_" + std::to_string(i+1), innerRadius, outerRadius, thickness/2., 0, twopi);
-	    tr[i] = G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,zpos));
-	    assembly->AddNode(*copperRing, tr[i]);
-	}
-	assembly->Voxelize();
-	return assembly;
+		// Place the widely spaced rings
+		for(int i=31; i < 35; i++){
+		    zpos = (232.356 + 838 - 50.125*25.4/2) * mm + (i-31)*48*mm; // distance wall to staves + distance stave start to first wide-spaced ring - origin to wall
+		    G4Tubs* copperRing = new G4Tubs("COPPER_RING_" + std::to_string(i+1), innerRadius, outerRadius, thickness/2., 0, twopi);
+		    tr[i] = G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,zpos));
+		    assembly->AddNode(*copperRing, tr[i]);
+		}
+		assembly->Voxelize();
+		return assembly;
     }
 }
