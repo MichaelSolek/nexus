@@ -189,12 +189,12 @@ namespace nexus{
 		// Field cage staves
 		G4SubtractionSolid* fieldCageStaves_solid = getFieldCageStaves();
 		G4LogicalVolume* fieldCageStaves_logic = new G4LogicalVolume(fieldCageStaves_solid, materials::Steel(), "FIELD_CAGE_STAVES");
-		new G4PVPlacement(0, G4ThreeVector(0,0,121.2685*mm), fieldCageStaves_logic, fieldCageStaves_logic->GetName(), chamber_logic, false, 0, true);
+		new G4PVPlacement(0, G4ThreeVector(0,0,121.2685*mm), fieldCageStaves_logic, fieldCageStaves_logic->GetName(), gas_logic, false, 0, true);
 	
 		// Buffer-Drift Copper Ring Assembly
 		G4MultiUnion* bufferDriftCopperRingAssembly_solid = getBufferDriftCopperRingAssembly();
 		G4LogicalVolume* bufferDriftCopperRingAssembly_logic = new G4LogicalVolume(bufferDriftCopperRingAssembly_solid, Copper, "BUFFER-DRIFT_COPPER_RING_ASSEMBLY"); 
-		new G4PVPlacement(0, G4ThreeVector(0,0,0), bufferDriftCopperRingAssembly_logic, bufferDriftCopperRingAssembly_logic->GetName(), chamber_logic, false, 0, true);
+		new G4PVPlacement(0, G4ThreeVector(0,0,0), bufferDriftCopperRingAssembly_logic, bufferDriftCopperRingAssembly_logic->GetName(), gas_logic, false, 0, true);
 
 		// Poly insulation assembly
 		G4MultiUnion* polyInsulationAssembly_solid = new G4MultiUnion("POLY_INSULATION_ASSEMBLY");
@@ -208,7 +208,7 @@ namespace nexus{
 		polyInsulationAssembly_solid->AddNode(outerPolyInsulation, G4Transform3D(*outerPolyRot, G4ThreeVector(0,0,0)));
 		polyInsulationAssembly_solid->Voxelize();
 		G4LogicalVolume* polyInsulationAssembly_logic = new G4LogicalVolume(polyInsulationAssembly_solid, materials::HDPE(), "POLY_INSULATION_ASSEMBLY");
-		new G4PVPlacement(0, G4ThreeVector(0,0,166.7685*mm), polyInsulationAssembly_logic, polyInsulationAssembly_logic->GetName(), chamber_logic, false, 0, true);
+		new G4PVPlacement(0, G4ThreeVector(0,0,166.7685*mm), polyInsulationAssembly_logic, polyInsulationAssembly_logic->GetName(), gas_logic, false, 0, true);
 
 		// Radioactive Source Encloser
     	//Source
@@ -321,31 +321,6 @@ namespace nexus{
                         "Unknown vertex generation region.");
         }
         return vtx_;
-    }
-
-    G4MultiUnion* getChamber(G4double chamber_diam, G4double chamber_thickn, G4double chamber_length) {
-        // Basic variable definitions
-		G4MultiUnion* chamber = new G4MultiUnion("CHAMBER");
-		G4Transform3D cylinderTransform, posWallTransform, negWallTransform; //Placements for cylinder and walls at +/- Z ends
-		G4Tubs* cylinder, *posWall, *negWall;
-
-		// Define the physical pieces
-		cylinder = new G4Tubs("CHAMBER", chamber_diam/2, (chamber_diam/2. + chamber_thickn),(chamber_length/2. + chamber_thickn), 0.,twopi);
-		posWall = new G4Tubs("CHAMBER_WALL_POS", 0, (chamber_diam/2. + chamber_thickn), chamber_thickn/2., 0., twopi);
-		negWall = new G4Tubs("CHAMBER_WALL_NEG", 0, (chamber_diam/2. + chamber_thickn), chamber_thickn/2., 0., twopi);
-
-		//Define transformations to place solid pieces
-		G4double zpos = chamber_length/2. + chamber_thickn;
-		cylinderTransform = G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,0));
-		posWallTransform = G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0, zpos));
-		negWallTransform = G4Transform3D(G4RotationMatrix(), G4ThreeVector(0,0,-zpos));
-
-		// Add geometry to multiunion, finalize it, and return it
-		chamber->AddNode(cylinder, cylinderTransform);
-		chamber->AddNode(posWall, posWallTransform);
-		chamber->AddNode(negWall, negWallTransform);
-		chamber->Voxelize();
-		return chamber;
     }
 
     G4MultiUnion* getReflectivePanelArray() {
