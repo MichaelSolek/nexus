@@ -17,8 +17,8 @@
 
 
 # GENERATOR
-/Generator/SingleParticle/max_energy 50 keV
-/Generator/SingleParticle/min_energy 50 keV
+/Generator/SingleParticle/max_energy 5 keV
+/Generator/SingleParticle/min_energy 5 keV
 /Generator/SingleParticle/region DRIFT
 /Generator/SingleParticle/particle e-
 /Generator/SingleParticle/momentum 0 0 -1

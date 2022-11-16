@@ -21,7 +21,8 @@
 /nexus/RegisterPersistencyManager PersistencyManager
 
 #Actions
-/nexus/RegisterTrackingAction DefaultTrackingAction
+#/nexus/RegisterTrackingAction DefaultTrackingAction
+/nexus/RegisterTrackingAction OpticalTrackingAction
 /nexus/RegisterEventAction DefaultEventAction
 #/nexus/RegisterEventAction SaveAllEventAction
 /nexus/RegisterRunAction DefaultRunAction
