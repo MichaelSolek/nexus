@@ -133,34 +133,15 @@ namespace nexus{
         G4LogicalVolume* gas_logic = new G4LogicalVolume(gas_solid, gxe, "GAS");
         new G4PVPlacement(0, G4ThreeVector(0., 0., 0.), gas_logic, gas_solid->GetName(),chamber_logic, false, 0, true);
 
-        // Defining regions and corresponding electric fields
+        // Defining regions
         // Drift region
         G4Tubs* drift_solid = new G4Tubs("DRIFT", 0., Active_diam/2., (807.157 * mm)/2., 0., twopi); //length is model distance from edge of cathode to edge of nearest EL ring
         G4LogicalVolume* drift_logic = new G4LogicalVolume(drift_solid, gxe, "DRIFT");
         new G4PVPlacement(0, G4ThreeVector(0., 0., -15.8094 * mm ), drift_logic, drift_solid->GetName(),gas_logic, false, 0, true); // offset calculated based off model
-        UniformElectricDriftField* drift_field = new UniformElectricDriftField();
-        drift_field->SetCathodePosition(cathode_ring_zpos);
-        drift_field->SetAnodePosition(el_ring1_zpos + el_gap_distance);
-        drift_field->SetDriftVelocity(1.*mm/microsecond);
-        drift_field->SetTransverseDiffusion(1.*mm/sqrt(cm));
-        drift_field->SetLongitudinalDiffusion(.5*mm/sqrt(cm));
-        G4Region* drift_region = new G4Region("DRIFT_REGION");
-        drift_region->SetUserInformation(drift_field);
-        drift_region->AddRootLogicalVolume(drift_logic);
         // EL region
         G4Tubs* EL_solid = new G4Tubs("EL_GAP", 0., (382. * mm)/2., (6.628 * mm)/2., 0, twopi);
         G4LogicalVolume* EL_logic = new G4LogicalVolume(EL_solid, gxe, "EL_GAP");
         new G4PVPlacement(0, G4ThreeVector(0., 0., -436.7015 * mm), EL_logic, EL_solid->GetName(), gas_logic, false, 0, true);
-        UniformElectricDriftField* el_field = new UniformElectricDriftField();
-        el_field->SetCathodePosition(el_ring1_zpos + el_gap_distance);
-        el_field->SetAnodePosition(el_ring1_zpos);
-        el_field->SetDriftVelocity(75.*mm/microsecond);
-        el_field->SetTransverseDiffusion(1.*mm/sqrt(cm));
-        el_field->SetLongitudinalDiffusion(.5*mm/sqrt(cm));
-        el_field->SetLightYield(1000./cm);
-        G4Region* el_region = new G4Region("EL_REGION");
-        el_region->SetUserInformation(el_field);
-        el_region->AddRootLogicalVolume(EL_logic);
         // Beyond EL region
         G4Tubs* beyondEL_solid = new G4Tubs("BEYOND_EL", 0., Active_diam/2., (7.022 * 25.4 * mm)/2., 0., twopi);
         G4LogicalVolume* beyondEL_logic = new G4LogicalVolume(beyondEL_solid, gxe, "BEYOND_EL");
@@ -208,6 +189,29 @@ namespace nexus{
         polyInsulationAssembly_solid->Voxelize();
         G4LogicalVolume* polyInsulationAssembly_logic = new G4LogicalVolume(polyInsulationAssembly_solid, materials::HDPE(), "POLY_INSULATION_ASSEMBLY");
         new G4PVPlacement(0, G4ThreeVector(0,0,166.7685*mm), polyInsulationAssembly_logic, polyInsulationAssembly_logic->GetName(), gas_logic, false, 0, true);
+
+		// Defining electric fields
+		// Drift region
+		UniformElectricDriftField* drift_field = new UniformElectricDriftField();
+        drift_field->SetCathodePosition(cathode_ring_zpos);
+        drift_field->SetAnodePosition(el_ring1_zpos + el_gap_distance);
+        drift_field->SetDriftVelocity(1.*mm/microsecond);
+        drift_field->SetTransverseDiffusion(1.*mm/sqrt(cm));
+        drift_field->SetLongitudinalDiffusion(.5*mm/sqrt(cm));
+        G4Region* drift_region = new G4Region("DRIFT_REGION");
+        drift_region->SetUserInformation(drift_field);
+        drift_region->AddRootLogicalVolume(drift_logic);
+		// EL region
+        UniformElectricDriftField* el_field = new UniformElectricDriftField();
+        el_field->SetCathodePosition(el_ring1_zpos + el_gap_distance);
+        el_field->SetAnodePosition(el_ring1_zpos);
+        el_field->SetDriftVelocity(75.*mm/microsecond);
+        el_field->SetTransverseDiffusion(1.*mm/sqrt(cm));
+        el_field->SetLongitudinalDiffusion(.5*mm/sqrt(cm));
+        el_field->SetLightYield(1000./cm);
+        G4Region* el_region = new G4Region("EL_REGION");
+        el_region->SetUserInformation(el_field);
+        el_region->AddRootLogicalVolume(EL_logic);
 
         // Radioactive Source Encloser
         //Source
