@@ -21,7 +21,7 @@
 /Generator/SingleParticle/min_energy 5 keV
 /Generator/SingleParticle/region DRIFT
 /Generator/SingleParticle/particle e-
-/Generator/SingleParticle/momentum 0 0 -1
+/Generator/SingleParticle/momentum 0 1 0
 
 #Actions
 #/Actions/DefaultEventAction/energy_threshold 1 keV

@@ -38,8 +38,8 @@ namespace nexus{
             GeometryBase(),
             msg_(nullptr),
             Lab_size(3. *m),
-            chamber_diam   (/*19.24*/22 * 2.54 * cm),  //based on model dimensions, not drawings, may need revision. Seems odd to not be 19.25
-            chamber_length (/*50.125*/ 60 * 2.54 * cm),//based on model dimensions, not drawings, may need revision
+            chamber_diam   (19.24 * 2.54 * cm),  //based on model dimensions, not drawings, may need revision. Seems odd to not be 19.25
+            chamber_length (50.125 * 2.54 * cm),//based on model dimensions, not drawings, may need revision
             chamber_thickn (0.76 * 25.4 * mm),         //based on model dimensions, not drawings, may need revision. Seems odd to not be 0.75
             Active_diam    (482.7 * mm),               //based on inner diameter of XON POLY OUTER WRAP.pdf drawing, may need revision
             Active_length  (1051. * mm),               //based on length of staves in drawings, may need revision
@@ -139,21 +139,23 @@ namespace nexus{
         G4LogicalVolume* drift_logic = new G4LogicalVolume(drift_solid, gxe, "DRIFT");
         new G4PVPlacement(0, G4ThreeVector(0., 0., -15.8094 * mm ), drift_logic, drift_solid->GetName(),gas_logic, false, 0, true); // offset calculated based off model
         // EL region
-        G4Tubs* EL_solid = new G4Tubs("EL_GAP", 0., (382. * mm)/2., (6.628 * mm)/2., 0, twopi);
+        G4double el_gap_distance = 19.628*mm; // This is ring width (13mm) plus actual gap distance (6.628mm)
+        G4double el_cathode_zpos = -427.8875*mm, el_anode_zpos = el_cathode_zpos - el_gap_distance;
+        G4Tubs* EL_solid = new G4Tubs("EL_GAP", 0., (382. * mm)/2., el_gap_distance/2., 0, twopi);
         G4LogicalVolume* EL_logic = new G4LogicalVolume(EL_solid, gxe, "EL_GAP");
-        new G4PVPlacement(0, G4ThreeVector(0., 0., -436.7015 * mm), EL_logic, EL_solid->GetName(), gas_logic, false, 0, true);
+        new G4PVPlacement(0, G4ThreeVector(0., 0., (el_cathode_zpos + el_anode_zpos)/2), EL_logic, EL_solid->GetName(), gas_logic, false, 0, true);
         // Beyond EL region
         G4Tubs* beyondEL_solid = new G4Tubs("BEYOND_EL", 0., Active_diam/2., (7.022 * 25.4 * mm)/2., 0., twopi);
         G4LogicalVolume* beyondEL_logic = new G4LogicalVolume(beyondEL_solid, gxe, "BEYOND_EL");
         new G4PVPlacement(0, G4ThreeVector(0., 0., -545.3015 * mm), beyondEL_logic, beyondEL_solid->GetName(), gas_logic, false, 0, true);
 
         // EL rings
-        G4double el_gap_distance = 19.628*mm, el_ring1_zpos = -447.5155*mm;
-        G4Tubs* el_ring1_solid = new G4Tubs("EL_RING1", (382. * mm)/2., (437. * mm)/2., (13. * mm)/2., 0., twopi);
-        G4Tubs* el_ring2_solid = new G4Tubs("EL_RING2", (382. * mm)/2., (437. * mm)/2., (13. * mm)/2., 0., twopi);
-        G4UnionSolid* el_rings_solid = new G4UnionSolid("EL_RINGS", el_ring1_solid, el_ring2_solid, 0, G4ThreeVector(0., 0., el_gap_distance)); // Make sure to place from ring 1, by wall
-        G4LogicalVolume* el_rings_logic = new G4LogicalVolume(el_rings_solid, materials::Steel(), "EL_RINGS");
-        new G4PVPlacement(0, G4ThreeVector(0., 0., el_ring1_zpos), el_rings_logic, el_rings_solid->GetName(), gas_logic, false, 0, true);
+        G4Tubs* el_cathode_ring_solid = new G4Tubs("EL_CATHODE_RING", (382. * mm)/2., (437. * mm)/2., (13. * mm)/2., 0., twopi);
+        G4Tubs* el_anode_ring_solid = new G4Tubs("EL_ANODE_RING", (382. * mm)/2., (437. * mm)/2., (13. * mm)/2., 0., twopi);
+        G4LogicalVolume* el_cathode_ring_logic = new G4LogicalVolume(el_cathode_ring_solid, materials::Steel(), "EL_CATHODE_RING");
+        G4LogicalVolume* el_anode_ring_logic = new G4LogicalVolume(el_anode_ring_solid, materials::Steel(), "EL_ANODE_RING");
+        new G4PVPlacement(0, G4ThreeVector(0., 0., el_anode_zpos), el_anode_ring_logic, el_anode_ring_solid->GetName(), gas_logic, false, 0, true);
+        new G4PVPlacement(0, G4ThreeVector(0., 0., el_cathode_zpos), el_cathode_ring_logic, el_cathode_ring_solid->GetName(), gas_logic, false, 0, true);
 
         // Cathode ring
         G4double cathode_ring_zpos = 392.7695 * mm;
@@ -194,7 +196,7 @@ namespace nexus{
 		// Drift region
 		UniformElectricDriftField* drift_field = new UniformElectricDriftField();
         drift_field->SetCathodePosition(cathode_ring_zpos);
-        drift_field->SetAnodePosition(el_ring1_zpos + el_gap_distance);
+        drift_field->SetAnodePosition(el_cathode_zpos);
         drift_field->SetDriftVelocity(1.*mm/microsecond);
         drift_field->SetTransverseDiffusion(1.*mm/sqrt(cm));
         drift_field->SetLongitudinalDiffusion(.5*mm/sqrt(cm));
@@ -203,8 +205,8 @@ namespace nexus{
         drift_region->AddRootLogicalVolume(drift_logic);
 		// EL region
         UniformElectricDriftField* el_field = new UniformElectricDriftField();
-        el_field->SetCathodePosition(el_ring1_zpos + el_gap_distance);
-        el_field->SetAnodePosition(el_ring1_zpos);
+        el_field->SetCathodePosition(el_cathode_zpos);
+        el_field->SetAnodePosition(el_anode_zpos);
         el_field->SetDriftVelocity(75.*mm/microsecond);
         el_field->SetTransverseDiffusion(1.*mm/sqrt(cm));
         el_field->SetLongitudinalDiffusion(.5*mm/sqrt(cm));
@@ -270,7 +272,8 @@ namespace nexus{
         G4LogicalVolume* Beyond = lvStore->GetVolume("BEYOND_EL");
         G4LogicalVolume* Gas = lvStore->GetVolume("GAS");
         G4LogicalVolume* Cathode = lvStore->GetVolume("CATHODE");
-        G4LogicalVolume* EL_Rings = lvStore->GetVolume("EL_RINGS");
+        G4LogicalVolume* EL_Cathode = lvStore->GetVolume("EL_CATHODE_RING");
+        G4LogicalVolume* EL_Anode = lvStore->GetVolume("EL_ANODE_RING");
         G4LogicalVolume* Panels = lvStore->GetVolume("REFLECTIVE_PANELS");
         G4LogicalVolume* FieldCageStaves = lvStore->GetVolume("FIELD_CAGE_STAVES");
         G4LogicalVolume* CopperRings = lvStore->GetVolume("BUFFER-DRIFT_COPPER_RING_ASSEMBLY");
@@ -303,7 +306,8 @@ namespace nexus{
         Chamber->SetVisAttributes(WireframeVa);
         HDPEWrap->SetVisAttributes(G4VisAttributes::GetInvisible());
         Cathode->SetVisAttributes(SteelVa);
-        EL_Rings->SetVisAttributes(SteelVa);
+        EL_Cathode->SetVisAttributes(SteelVa);
+        EL_Anode->SetVisAttributes(SteelVa);
         Panels->SetVisAttributes(TeflonVa);
         FieldCageStaves->SetVisAttributes(SteelVa);
         CopperRings->SetVisAttributes(CopperVa);
