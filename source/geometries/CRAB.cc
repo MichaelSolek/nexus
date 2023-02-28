@@ -9,6 +9,7 @@
 #include "UniformElectricDriftField.h"
 #include "IonizationSD.h"
 #include "FactoryBase.h"
+#include "XenonProperties.h"
 #include <G4Box.hh>
 #include <G4SubtractionSolid.hh>
 #include <G4GenericMessenger.hh>
@@ -105,12 +106,9 @@ namespace nexus{
 
         //Define required unimplemented materials
         G4Element* elCu = new G4Element("Copper", "Cu", 29, 63.546*g/mole);
-        G4Element* elAu = new G4Element("Gold", "Au", 79, 196.97*g/mole);
         G4Material* Copper = new G4Material("Copper", 8.960*g/cm3, 1);
         Copper->AddElement(elCu, 1);
-        // GOLD NEEDS TO BE REPLACED WITH TEFLON. FIND REPLACEMENT MATERIAL AND REMOVE THE FOLLOWING 2 LINES
-        G4Material* Gold = new G4Material("Gold", 19.3*g/cm3, 1);
-        Gold->AddElement(elAu, 1);
+        G4Material* teflon = G4NistManager::Instance()->FindOrBuildMaterial("G4_TEFLON");
 
         //Constructing Lab Space
         G4String lab_name="LAB";
@@ -165,7 +163,7 @@ namespace nexus{
 
         // Reflective panel array
         G4MultiUnion* reflectors_solid = getReflectivePanelArray();
-        G4LogicalVolume* reflectors_logic = new G4LogicalVolume(reflectors_solid, Gold, "REFLECTIVE_PANELS"); // Not the right material. Needs to be changed to teflon. See NEXT-100 for implementation.
+        G4LogicalVolume* reflectors_logic = new G4LogicalVolume(reflectors_solid, teflon, "REFLECTIVE_PANELS");
         new G4PVPlacement(0, G4ThreeVector(0., 0., -250.0455 * mm), reflectors_logic, reflectors_solid->GetName(), gas_logic, false, 0, true); // Note: calculating this from the cathode decreases z-component by ~0.1 mm
 
         // Field cage staves
@@ -197,9 +195,9 @@ namespace nexus{
 		UniformElectricDriftField* drift_field = new UniformElectricDriftField();
         drift_field->SetCathodePosition(cathode_ring_zpos);
         drift_field->SetAnodePosition(el_cathode_zpos);
-        drift_field->SetDriftVelocity(1.*mm/microsecond);
-        drift_field->SetTransverseDiffusion(1.*mm/sqrt(cm));
-        drift_field->SetLongitudinalDiffusion(.5*mm/sqrt(cm));
+        drift_field->SetDriftVelocity(1.*mm/microsecond); // Testing value borrowed from Next100FieldCage.cc
+        drift_field->SetTransverseDiffusion(1.*mm/sqrt(cm)); //Testing value borrowed from Next100FieldCage.cc
+        drift_field->SetLongitudinalDiffusion(.3*mm/sqrt(cm)); // testing value borrowed from Next100FieldCage.cc
         G4Region* drift_region = new G4Region("DRIFT_REGION");
         drift_region->SetUserInformation(drift_field);
         drift_region->AddRootLogicalVolume(drift_logic);
@@ -207,10 +205,11 @@ namespace nexus{
         UniformElectricDriftField* el_field = new UniformElectricDriftField();
         el_field->SetCathodePosition(el_cathode_zpos);
         el_field->SetAnodePosition(el_anode_zpos);
-        el_field->SetDriftVelocity(75.*mm/microsecond);
-        el_field->SetTransverseDiffusion(1.*mm/sqrt(cm));
-        el_field->SetLongitudinalDiffusion(.5*mm/sqrt(cm));
-        el_field->SetLightYield(1000./cm);
+        el_field->SetDriftVelocity(2.5*mm/microsecond); // Testing value borrowed from Next100FieldCage.cc
+        el_field->SetTransverseDiffusion(0.*mm/sqrt(cm)); // Testing value borrowed from Next100FieldCage.cc
+        el_field->SetLongitudinalDiffusion(0.*mm/sqrt(cm)); //Testing Value borrowed from Next100FieldCage.cc
+        el_field->SetLightYield(10./cm);
+	//el_field->SetLightYield(XenonELLightYield(34.5*kilovolt/cm, 10.*bar)); // EL field strength borrowed from Next100FieldCage.cc, estimated to be 22 kV
         G4Region* el_region = new G4Region("EL_REGION");
         el_region->SetUserInformation(el_field);
         el_region->AddRootLogicalVolume(EL_logic);
